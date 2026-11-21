@@ -35,7 +35,8 @@ jobs:
         image: postgres:17-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          # Throwaway database that lives only for this job, so it uses trust authentication.
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: sports_booking_test
         ports:
           - 5432:5432
@@ -45,8 +46,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sports_booking_test
-      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sports_booking_test
+      DATABASE_URL: postgresql://postgres@localhost:5432/sports_booking_test
+      DIRECT_URL: postgresql://postgres@localhost:5432/sports_booking_test
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
