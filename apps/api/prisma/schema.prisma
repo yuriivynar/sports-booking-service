@@ -1,0 +1,482 @@
+// SportHub data model.
+//
+// Conventions:
+// - Money is stored in kopecks (Int) to avoid floating point errors.
+// - Timestamps are timestamptz; the UI shows them in Europe/Kyiv.
+// - Tables and columns use snake_case, the usual Postgres style.
+// - Constraints Prisma cannot express (exclusion constraints, partial unique
+//   indexes, CHECKs, row level security) live in hand-written migrations.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum LoyaltyTier {
+  STANDARD
+  PREMIUM
+  CORPORATE
+}
+
+/// Training level of a section (рівень підготовки).
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+/// Age category of a section (вікова категорія).
+enum AgeGroup {
+  KIDS
+  TEENS
+  ADULTS
+  SENIORS
+}
+
+enum HallKind {
+  GYM
+  POOL
+  COURT
+  FIELD
+  STUDIO
+}
+
+enum BookingType {
+  HALL_RENTAL
+  GROUP_SESSION
+  PERSONAL_TRAINING
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum MembershipKind {
+  SINGLE
+  MONTHLY
+  CORPORATE
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum BonusReason {
+  BOOKING_REWARD
+  REDEMPTION
+  REFUND
+  ADJUSTMENT
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  REMINDER
+  BONUS_EARNED
+  NEW_SECTION
+  PROMOTION
+}
+
+// ---------- Users ----------
+
+/// Profile of a Supabase Auth user. The id equals auth.users.id.
+model User {
+  id                 String      @id @db.Uuid
+  email              String      @unique
+  fullName           String?     @map("full_name")
+  phone              String?
+  avatarUrl          String?     @map("avatar_url")
+  role               Role        @default(CLIENT)
+  loyaltyTier        LoyaltyTier @default(STANDARD) @map("loyalty_tier")
+  bonusBalance       Int         @default(0) @map("bonus_balance")
+  companyName        String?     @map("company_name")
+  preferredLevel     SkillLevel? @map("preferred_level")
+  emailNotifications Boolean     @default(true) @map("email_notifications")
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  preferredSports   Sport[]            @relation("UserPreferredSports")
+  bookings          Booking[]
+  memberships       Membership[]
+  payments          Payment[]
+  bonusTransactions BonusTransaction[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+// ---------- Catalog ----------
+
+model Sport {
+  id   String @id @default(uuid(7)) @db.Uuid
+  slug String @unique
+  name String
+  /// lucide-react icon name used by the web app.
+  icon String
+
+  halls      Hall[]           @relation("HallSports")
+  trainers   Trainer[]        @relation("TrainerSports")
+  sections   Section[]
+  fans       User[]           @relation("UserPreferredSports")
+  plans      MembershipPlan[]
+  promotions Promotion[]
+
+  @@map("sports")
+}
+
+model SportCenter {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  slug        String   @unique
+  name        String
+  description String
+  address     String
+  city        String   @default("Львів")
+  latitude    Float
+  longitude   Float
+  phone       String
+  photoUrl    String?  @map("photo_url")
+  /// Opening hours in whole hours, local time.
+  openHour    Int      @default(7) @map("open_hour")
+  closeHour   Int      @default(22) @map("close_hour")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  halls      Hall[]
+  trainers   Trainer[]
+  sections   Section[]
+  plans      MembershipPlan[]
+  promotions Promotion[]
+
+  @@map("sport_centers")
+}
+
+model Hall {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  centerId    String   @map("center_id") @db.Uuid
+  name        String
+  description String
+  kind        HallKind
+  capacity    Int
+  /// Rental price for one hour, in kopecks.
+  hourlyPrice Int      @map("hourly_price")
+  photoUrl    String?  @map("photo_url")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  center        SportCenter    @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  sports        Sport[]        @relation("HallSports")
+  groupSessions GroupSession[]
+  bookings      Booking[]
+  occupancies   Occupancy[]
+
+  @@unique([centerId, name])
+  @@index([centerId])
+  @@map("halls")
+}
+
+model Trainer {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  centerId        String   @map("center_id") @db.Uuid
+  fullName        String   @map("full_name")
+  bio             String
+  photoUrl        String?  @map("photo_url")
+  experienceYears Int      @map("experience_years")
+  /// Price of a one-hour personal session, in kopecks.
+  sessionPrice    Int      @map("session_price")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  center        SportCenter    @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  sports        Sport[]        @relation("TrainerSports")
+  sections      Section[]
+  groupSessions GroupSession[]
+  bookings      Booking[]
+  occupancies   Occupancy[]
+
+  @@unique([centerId, fullName])
+  @@index([centerId])
+  @@map("trainers")
+}
+
+/// A recurring group activity, for example "Йога для початківців".
+model Section {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  centerId     String     @map("center_id") @db.Uuid
+  sportId      String     @map("sport_id") @db.Uuid
+  trainerId    String?    @map("trainer_id") @db.Uuid
+  name         String
+  description  String
+  level        SkillLevel
+  ageGroup     AgeGroup   @map("age_group")
+  /// Default number of places in a session.
+  capacity     Int
+  /// Price of one visit, in kopecks.
+  sessionPrice Int        @map("session_price")
+  isActive     Boolean    @default(true) @map("is_active")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  center   SportCenter    @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  sport    Sport          @relation(fields: [sportId], references: [id])
+  trainer  Trainer?       @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  sessions GroupSession[]
+
+  @@unique([centerId, name])
+  @@index([sportId, level, ageGroup])
+  @@map("sections")
+}
+
+/// One scheduled occurrence of a section.
+model GroupSession {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  sectionId   String   @map("section_id") @db.Uuid
+  hallId      String   @map("hall_id") @db.Uuid
+  trainerId   String?  @map("trainer_id") @db.Uuid
+  startsAt    DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt      DateTime @map("ends_at") @db.Timestamptz(6)
+  capacity    Int
+  /// Places taken. Changed only by an atomic conditional UPDATE.
+  bookedCount Int      @default(0) @map("booked_count")
+  isCancelled Boolean  @default(false) @map("is_cancelled")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  section   Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  hall      Hall       @relation(fields: [hallId], references: [id], onDelete: Cascade)
+  trainer   Trainer?   @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  bookings  Booking[]
+  occupancy Occupancy?
+
+  @@unique([sectionId, startsAt])
+  @@index([startsAt])
+  @@map("group_sessions")
+}
+
+/// Time a hall or trainer is taken. Exclusion constraints on this table
+/// make overlapping reservations impossible at the database level.
+model Occupancy {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  hallId         String?  @map("hall_id") @db.Uuid
+  trainerId      String?  @map("trainer_id") @db.Uuid
+  startsAt       DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt         DateTime @map("ends_at") @db.Timestamptz(6)
+  bookingId      String?  @unique @map("booking_id") @db.Uuid
+  groupSessionId String?  @unique @map("group_session_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  hall         Hall?         @relation(fields: [hallId], references: [id], onDelete: Cascade)
+  trainer      Trainer?      @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  booking      Booking?      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  groupSession GroupSession? @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
+
+  @@map("occupancies")
+}
+
+// ---------- Booking and payments ----------
+
+model Booking {
+  id                String        @id @default(uuid(7)) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  type              BookingType
+  status            BookingStatus @default(PENDING)
+  hallId            String?       @map("hall_id") @db.Uuid
+  groupSessionId    String?       @map("group_session_id") @db.Uuid
+  trainerId         String?       @map("trainer_id") @db.Uuid
+  membershipId      String?       @map("membership_id") @db.Uuid
+  startsAt          DateTime      @map("starts_at") @db.Timestamptz(6)
+  endsAt            DateTime      @map("ends_at") @db.Timestamptz(6)
+  /// Price before discounts, in kopecks.
+  basePrice         Int           @map("base_price")
+  /// Sum of all discounts, in kopecks.
+  discount          Int           @default(0)
+  /// Bonus points spent; one point equals one hryvnia.
+  pointsRedeemed    Int           @default(0) @map("points_redeemed")
+  /// Amount to pay, in kopecks.
+  finalPrice        Int           @map("final_price")
+  pointsEarned      Int           @default(0) @map("points_earned")
+  /// Human-readable list of applied price modifiers.
+  priceBreakdown    Json?         @map("price_breakdown")
+  cancelReason      String?       @map("cancel_reason")
+  confirmedAt       DateTime?     @map("confirmed_at") @db.Timestamptz(6)
+  cancelledAt       DateTime?     @map("cancelled_at") @db.Timestamptz(6)
+  reminder24hSentAt DateTime?     @map("reminder_24h_sent_at") @db.Timestamptz(6)
+  reminder2hSentAt  DateTime?     @map("reminder_2h_sent_at") @db.Timestamptz(6)
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hall              Hall?              @relation(fields: [hallId], references: [id], onDelete: Restrict)
+  groupSession      GroupSession?      @relation(fields: [groupSessionId], references: [id], onDelete: Restrict)
+  trainer           Trainer?           @relation(fields: [trainerId], references: [id], onDelete: Restrict)
+  membership        Membership?        @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+  occupancy         Occupancy?
+  payments          Payment[]
+  bonusTransactions BonusTransaction[]
+
+  @@index([userId, startsAt])
+  @@index([status, startsAt])
+  @@map("bookings")
+}
+
+/// A simulated payment for a booking or a membership.
+model Payment {
+  id            String        @id @default(uuid(7)) @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  bookingId     String?       @map("booking_id") @db.Uuid
+  membershipId  String?       @map("membership_id") @db.Uuid
+  /// Amount in kopecks.
+  amount        Int
+  status        PaymentStatus @default(PENDING)
+  provider      String        @default("simulated")
+  providerRef   String?       @map("provider_ref")
+  failureReason String?       @map("failure_reason")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking    Booking?    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  membership Membership? @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([membershipId])
+  @@map("payments")
+}
+
+// ---------- Memberships and loyalty ----------
+
+/// A tariff the administrator sells, for example "Місячний безліміт".
+model MembershipPlan {
+  id           String         @id @default(uuid(7)) @db.Uuid
+  name         String         @unique
+  description  String
+  kind         MembershipKind
+  /// Price in kopecks.
+  price        Int
+  /// Validity period; null means no time limit.
+  durationDays Int?           @map("duration_days")
+  /// Number of visits; null means unlimited.
+  visits       Int?
+  /// Limits the plan to one center; null means the whole network.
+  centerId     String?        @map("center_id") @db.Uuid
+  /// Limits the plan to one sport; null means any sport.
+  sportId      String?        @map("sport_id") @db.Uuid
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  center      SportCenter? @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  sport       Sport?       @relation(fields: [sportId], references: [id])
+  memberships Membership[]
+
+  @@map("membership_plans")
+}
+
+/// A membership a user bought.
+model Membership {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String           @map("user_id") @db.Uuid
+  planId      String           @map("plan_id") @db.Uuid
+  kind        MembershipKind
+  status      MembershipStatus @default(PENDING)
+  startsAt    DateTime?        @map("starts_at") @db.Timestamptz(6)
+  endsAt      DateTime?        @map("ends_at") @db.Timestamptz(6)
+  visitsLeft  Int?             @map("visits_left")
+  companyName String?          @map("company_name")
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     MembershipPlan @relation(fields: [planId], references: [id])
+  bookings Booking[]
+  payments Payment[]
+
+  @@index([userId, status])
+  @@map("memberships")
+}
+
+/// Ledger of bonus points; users.bonus_balance is the running total.
+model BonusTransaction {
+  id        String      @id @default(uuid(7)) @db.Uuid
+  userId    String      @map("user_id") @db.Uuid
+  bookingId String?     @map("booking_id") @db.Uuid
+  /// Positive for accruals, negative for redemptions.
+  amount    Int
+  reason    BonusReason
+  note      String?
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("bonus_transactions")
+}
+
+/// A discount campaign (акція).
+model Promotion {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  title           String
+  description     String
+  discountPercent Int      @map("discount_percent")
+  /// Limits the promotion to one sport; null means any sport.
+  sportId         String?  @map("sport_id") @db.Uuid
+  /// Limits the promotion to one center; null means the whole network.
+  centerId        String?  @map("center_id") @db.Uuid
+  startsAt        DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt          DateTime @map("ends_at") @db.Timestamptz(6)
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sport  Sport?       @relation(fields: [sportId], references: [id])
+  center SportCenter? @relation(fields: [centerId], references: [id], onDelete: Cascade)
+
+  @@index([startsAt, endsAt])
+  @@map("promotions")
+}
+
+// ---------- Notifications ----------
+
+model Notification {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  userId      String           @map("user_id") @db.Uuid
+  type        NotificationType
+  title       String
+  body        String
+  /// Path in the web app to open, for example /bookings/123.
+  link        String?
+  readAt      DateTime?        @map("read_at") @db.Timestamptz(6)
+  emailSentAt DateTime?        @map("email_sent_at") @db.Timestamptz(6)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}
