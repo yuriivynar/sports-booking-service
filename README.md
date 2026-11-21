@@ -93,23 +93,25 @@
 | --------------------------- | -------------------------------- |
 | Сайт                        | http://localhost:3000            |
 | API (перевірка стану)       | http://localhost:4000/api/health |
+| Документація API (Swagger)  | http://localhost:4000/api/docs   |
 | Mailpit (перехоплені листи) | http://localhost:8025            |
 
 ## Корисні команди
 
-| Команда                        | Що робить                                                       |
-| ------------------------------ | --------------------------------------------------------------- |
-| `pnpm dev`                     | Запускає API і сайт у режимі розробки                           |
-| `pnpm build`                   | Збирає обидва застосунки                                        |
-| `pnpm lint`                    | Перевіряє код лінтерами (oxlint для API, ESLint для сайту)      |
-| `pnpm typecheck`               | Перевіряє типи TypeScript                                       |
-| `pnpm test`                    | Запускає модульні тести                                         |
-| `pnpm --filter api test:e2e`   | Запускає e2e-тести API на окремій базі `sports_booking_test`    |
-| `pnpm --filter api db:migrate` | Створює та застосовує нову міграцію після зміни `schema.prisma` |
-| `pnpm --filter api db:deploy`  | Застосовує наявні міграції                                      |
-| `pnpm --filter api db:seed`    | Додає демодані; повторний запуск лише доповнює розклад          |
-| `pnpm --filter api db:studio`  | Відкриває Prisma Studio для перегляду даних                     |
-| `pnpm format`                  | Форматує код за допомогою Prettier                              |
+| Команда                                | Що робить                                                                  |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| `pnpm dev`                             | Запускає API і сайт у режимі розробки                                      |
+| `pnpm build`                           | Збирає обидва застосунки                                                   |
+| `pnpm lint`                            | Перевіряє код лінтерами (oxlint для API, ESLint для сайту)                 |
+| `pnpm typecheck`                       | Перевіряє типи TypeScript                                                  |
+| `pnpm test`                            | Запускає модульні тести                                                    |
+| `pnpm --filter api test:e2e`           | Запускає e2e-тести API на окремій базі `sports_booking_test`               |
+| `pnpm --filter api db:migrate`         | Створює та застосовує нову міграцію після зміни `schema.prisma`            |
+| `pnpm --filter api db:deploy`          | Застосовує наявні міграції                                                 |
+| `pnpm --filter api db:seed`            | Додає демодані; повторний запуск лише доповнює розклад                     |
+| `pnpm --filter api db:seed:production` | Додає демодані в продакшн-базу (адреса з `apps/api/.env.production.local`) |
+| `pnpm --filter api db:studio`          | Відкриває Prisma Studio для перегляду даних                                |
+| `pnpm format`                          | Форматує код за допомогою Prettier                                         |
 
 ## CI/CD
 
@@ -126,7 +128,7 @@
 | `sports-booking-service-web` | `apps/web`     | Next.js                                  | https://sports-booking-service-web.vercel.app |
 
 1. На [vercel.com/new](https://vercel.com/new) імпортуйте репозиторій і створіть проєкт API з налаштуваннями з таблиці.
-2. Додайте змінні середовища API (перелік і пояснення — у `apps/api/.env.example`). `WEB_ORIGIN` — адреса сайту, з якої дозволені запити.
+2. Додайте змінні середовища API (перелік і пояснення — у `apps/api/.env.example`). `WEB_ORIGIN` — адреса сайту, з якої дозволені запити. `ADMIN_EMAILS` — email-и адміністраторів через кому: ці користувачі отримують роль `ADMIN` під час входу.
 3. Так само створіть проєкт сайту і додайте змінні з `apps/web/.env.example`. `NEXT_PUBLIC_API_URL` — адреса API з префіксом `/api`. Змінні з префіксом `NEXT_PUBLIC_` вбудовуються в код для браузера, тому їх додають як звичайні (не Sensitive).
 4. Після цього кожне злиття в `main` розгортається автоматично.
 
