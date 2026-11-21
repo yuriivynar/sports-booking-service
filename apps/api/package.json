@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "REST API for the sports booking service",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {

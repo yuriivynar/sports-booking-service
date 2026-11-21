@@ -109,12 +109,14 @@
 
 Застосунки розгортаються як два окремі проєкти Vercel з одного репозиторію:
 
-| Проєкт               | Root Directory | Framework Preset                         |
-| -------------------- | -------------- | ---------------------------------------- |
-| `sports-booking-api` | `apps/api`     | NestJS (задано в `apps/api/vercel.json`) |
-| `sports-booking-web` | `apps/web`     | Next.js                                  |
+| Проєкт                       | Root Directory | Framework Preset                         | Продакшн                                      |
+| ---------------------------- | -------------- | ---------------------------------------- | --------------------------------------------- |
+| `sports-booking-service-api` | `apps/api`     | NestJS (задано в `apps/api/vercel.json`) | https://sports-booking-service-api.vercel.app |
+| `sports-booking-service-web` | `apps/web`     | Next.js                                  | https://sports-booking-service-web.vercel.app |
 
 1. На [vercel.com/new](https://vercel.com/new) імпортуйте репозиторій і створіть проєкт API з налаштуваннями з таблиці.
 2. Додайте змінні середовища API (перелік і пояснення — у `apps/api/.env.example`). `WEB_ORIGIN` — адреса сайту, з якої дозволені запити.
-3. Так само створіть проєкт сайту і додайте змінні з `apps/web/.env.example`. `NEXT_PUBLIC_API_URL` — адреса API з префіксом `/api`.
+3. Так само створіть проєкт сайту і додайте змінні з `apps/web/.env.example`. `NEXT_PUBLIC_API_URL` — адреса API з префіксом `/api`. Змінні з префіксом `NEXT_PUBLIC_` вбудовуються в код для браузера, тому їх додають як звичайні (не Sensitive).
 4. Після цього кожне злиття в `main` розгортається автоматично.
+
+API працює як Vercel Function: Vercel викликає обробник, експортований із `apps/api/src/serverless.ts`, а не сервер, що слухає порт. Функція розгортається в регіоні Frankfurt (`fra1`), найближчому до користувачів і бази даних.
