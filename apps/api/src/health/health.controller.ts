@@ -1,4 +1,6 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface HealthStatus {
@@ -12,6 +14,8 @@ export interface HealthStatus {
  * Responds 503 when the database is unreachable, because the API cannot
  * serve any real request without it.
  */
+@ApiTags('Службове')
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
