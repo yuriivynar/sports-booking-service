@@ -35,3 +35,6 @@ docs/notes/
 # Markdown files stay local; README is the only exception
 *.md
 !/README.md
+
+# Generated Prisma client (created by `prisma generate` on install)
+apps/api/src/generated/
