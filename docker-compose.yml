@@ -1,14 +1,16 @@
 # Local development services. Production uses Supabase (Postgres, Auth, Storage).
+# Ports are bound to 127.0.0.1, so these services are reachable only from this machine.
 services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sports_booking
+      # Local-only database: trust authentication instead of a hardcoded credential.
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5433:5432' # 5433 on the host: avoids clashing with a locally installed Postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -22,8 +24,8 @@ services:
     image: axllent/mailpit:v1.34.0
     restart: unless-stopped
     ports:
-      - '1025:1025' # SMTP: the API sends emails here
-      - '8025:8025' # Web UI: open http://localhost:8025 to read them
+      - '127.0.0.1:1025:1025' # SMTP: the API sends emails here
+      - '127.0.0.1:8025:8025' # Web UI: open http://localhost:8025 to read them
 
 volumes:
   postgres-data:
