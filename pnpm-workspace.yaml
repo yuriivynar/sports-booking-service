@@ -4,3 +4,8 @@ packages:
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+overrides:
+  # GHSA-g3hv-75wg-m249: the shadcn CLI pulls minimatch 10 through ts-morph.
+  # minimatch 11 keeps the minimatch(path, pattern) call that ts-morph uses.
+  '@ts-morph/common>minimatch': ^11.0.1
