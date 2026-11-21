@@ -1,0 +1,260 @@
+@startuml er-diagram
+' ER-діаграма бази даних SportHub (PostgreSQL, Supabase).
+' Згенерувати PNG: docker run --rm -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/er-diagram.puml
+
+!theme plain
+skinparam dpi 150
+skinparam defaultFontName "DejaVu Sans"
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam class {
+  BorderColor #3B6EA8
+  HeaderBackgroundColor #EEF4FF
+}
+skinparam package {
+  BorderColor #A0AEC0
+  FontColor #2D3748
+}
+hide circle
+hide methods
+
+title SportHub — ER-діаграма (created_at / updated_at опущено)
+
+package "Користувачі" {
+  entity users {
+    * id : uuid <<PK, = auth.users.id>>
+    --
+    * email : text <<unique>>
+    full_name : text
+    phone : text
+    avatar_url : text
+    * role : Role
+    * loyalty_tier : LoyaltyTier
+    * bonus_balance : int
+    company_name : text
+    preferred_level : SkillLevel
+    * email_notifications : bool
+  }
+}
+
+package "Каталог" {
+  entity sports {
+    * id : uuid <<PK>>
+    --
+    * slug : text <<unique>>
+    * name : text
+    * icon : text
+  }
+
+  entity sport_centers {
+    * id : uuid <<PK>>
+    --
+    * slug : text <<unique>>
+    * name : text
+    * address : text
+    * latitude : float
+    * longitude : float
+    * phone : text
+    * open_hour : int
+    * close_hour : int
+  }
+
+  entity halls {
+    * id : uuid <<PK>>
+    --
+    * center_id : uuid <<FK>>
+    * name : text
+    * kind : HallKind
+    * capacity : int
+    * hourly_price : int (коп.)
+    * is_active : bool
+  }
+
+  entity trainers {
+    * id : uuid <<PK>>
+    --
+    * center_id : uuid <<FK>>
+    * full_name : text
+    * experience_years : int
+    * session_price : int (коп.)
+    * is_active : bool
+  }
+
+  entity sections {
+    * id : uuid <<PK>>
+    --
+    * center_id : uuid <<FK>>
+    * sport_id : uuid <<FK>>
+    trainer_id : uuid <<FK>>
+    * name : text
+    * level : SkillLevel
+    * age_group : AgeGroup
+    * capacity : int
+    * session_price : int (коп.)
+  }
+
+  entity group_sessions {
+    * id : uuid <<PK>>
+    --
+    * section_id : uuid <<FK>>
+    * hall_id : uuid <<FK>>
+    trainer_id : uuid <<FK>>
+    * starts_at : timestamptz
+    * ends_at : timestamptz
+    * capacity : int
+    * booked_count : int
+    * is_cancelled : bool
+  }
+}
+
+package "Бронювання та оплата" {
+  entity bookings {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<FK>>
+    * type : BookingType
+    * status : BookingStatus
+    hall_id : uuid <<FK>>
+    group_session_id : uuid <<FK>>
+    trainer_id : uuid <<FK>>
+    membership_id : uuid <<FK>>
+    * starts_at : timestamptz
+    * ends_at : timestamptz
+    * base_price / discount / final_price : int
+    * points_redeemed / points_earned : int
+    price_breakdown : jsonb
+    reminder_24h_sent_at / reminder_2h_sent_at
+  }
+
+  entity occupancies {
+    * id : uuid <<PK>>
+    --
+    hall_id : uuid <<FK>>
+    trainer_id : uuid <<FK>>
+    * starts_at : timestamptz
+    * ends_at : timestamptz
+    booking_id : uuid <<FK, unique>>
+    group_session_id : uuid <<FK, unique>>
+  }
+
+  entity payments {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<FK>>
+    booking_id : uuid <<FK>>
+    membership_id : uuid <<FK>>
+    * amount : int (коп.)
+    * status : PaymentStatus
+    * provider : text
+  }
+}
+
+package "Абонементи та лояльність" {
+  entity membership_plans {
+    * id : uuid <<PK>>
+    --
+    * name : text <<unique>>
+    * kind : MembershipKind
+    * price : int (коп.)
+    duration_days : int
+    visits : int
+    center_id : uuid <<FK>>
+    sport_id : uuid <<FK>>
+  }
+
+  entity memberships {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<FK>>
+    * plan_id : uuid <<FK>>
+    * kind : MembershipKind
+    * status : MembershipStatus
+    starts_at / ends_at : timestamptz
+    visits_left : int
+  }
+
+  entity bonus_transactions {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<FK>>
+    booking_id : uuid <<FK>>
+    * amount : int
+    * reason : BonusReason
+  }
+
+  entity promotions {
+    * id : uuid <<PK>>
+    --
+    * title : text
+    * discount_percent : int
+    sport_id : uuid <<FK>>
+    center_id : uuid <<FK>>
+    * starts_at / ends_at : timestamptz
+    * is_active : bool
+  }
+}
+
+package "Сповіщення" {
+  entity notifications {
+    * id : uuid <<PK>>
+    --
+    * user_id : uuid <<FK>>
+    * type : NotificationType
+    * title : text
+    * body : text
+    link : text
+    read_at / email_sent_at : timestamptz
+  }
+}
+
+' --- Каталог ---
+sport_centers ||--o{ halls
+sport_centers ||--o{ trainers
+sport_centers ||--o{ sections
+sports ||--o{ sections
+trainers |o--o{ sections
+sections ||--o{ group_sessions
+halls ||--o{ group_sessions
+trainers |o--o{ group_sessions
+halls }o--o{ sports : _HallSports
+trainers }o--o{ sports : _TrainerSports
+users }o--o{ sports : _UserPreferredSports
+
+' --- Бронювання ---
+users ||--o{ bookings
+halls |o--o{ bookings
+group_sessions |o--o{ bookings
+trainers |o--o{ bookings
+memberships |o--o{ bookings
+bookings |o--o| occupancies
+group_sessions |o--o| occupancies
+halls |o--o{ occupancies
+trainers |o--o{ occupancies
+users ||--o{ payments
+bookings |o--o{ payments
+memberships |o--o{ payments
+
+' --- Абонементи та лояльність ---
+users ||--o{ memberships
+membership_plans ||--o{ memberships
+users ||--o{ bonus_transactions
+bookings |o--o{ bonus_transactions
+sport_centers |o--o{ membership_plans
+sports |o--o{ membership_plans
+sports |o--o{ promotions
+sport_centers |o--o{ promotions
+
+users ||--o{ notifications
+
+note bottom of occupancies
+  EXCLUDE USING gist (hall_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+  EXCLUDE USING gist (trainer_id WITH =, tstzrange(starts_at, ends_at) WITH &&)
+  Зал або тренер не можуть бути зайняті двічі в той самий час.
+end note
+
+note bottom of group_sessions
+  CHECK (booked_count BETWEEN 0 AND capacity)
+end note
+
+@enduml

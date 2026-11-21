@@ -1,7 +1,13 @@
 packages:
   - apps/*
 
+# Packages allowed to run install scripts: Prisma downloads its schema engine.
+onlyBuiltDependencies:
+  - '@prisma/engines'
+  - prisma
+
 ignoredBuiltDependencies:
+  - esbuild
   - sharp
   - unrs-resolver
 
