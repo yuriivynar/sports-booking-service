@@ -1,0 +1,130 @@
+@startuml use-case
+' Діаграма варіантів використання SportHub (варіант 1 курсової роботи).
+' Згенерувати PNG: docker run --rm -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/use-case.puml
+
+left to right direction
+skinparam dpi 150
+skinparam defaultFontName "DejaVu Sans"
+skinparam shadowing false
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam ArrowColor #4A5568
+skinparam usecase {
+  BackgroundColor #EEF4FF
+  BorderColor #3B6EA8
+}
+skinparam package {
+  BorderColor #A0AEC0
+  FontColor #2D3748
+}
+
+title SportHub — діаграма варіантів використання
+
+actor "Гість" as Guest
+actor "Клієнт" as Client
+actor "Адміністратор" as Admin
+
+actor "Google" as Google <<система>>
+actor "Платіжний шлюз\n(імітація)" as Payment <<система>>
+actor "Планувальник\n(Supabase Cron)" as Cron <<система>>
+actor "Email-сервіс" as Email <<система>>
+
+Client -up-|> Guest
+
+rectangle "SportHub" {
+  package "Каталог" {
+    usecase "Переглянути каталог\nзалів, секцій і тренерів" as UC_Catalog
+    usecase "Фільтрувати за видом спорту,\nрівнем і віковою категорією" as UC_Filter
+    usecase "Переглянути центри на карті" as UC_Map
+  }
+
+  package "Обліковий запис" {
+    usecase "Зареєструватися / увійти" as UC_Login
+    usecase "Увійти через Google" as UC_Google
+  }
+
+  package "Бронювання" {
+    usecase "Забронювати послугу" as UC_Book
+    usecase "Орендувати зал\nна часовий слот" as UC_Hall
+    usecase "Записатися\nна групове заняття" as UC_Group
+    usecase "Забронювати\nперсональне тренування" as UC_Personal
+    usecase "Перевірити доступність" as UC_Check
+    usecase "Скасувати бронювання" as UC_Cancel
+  }
+
+  package "Оплата" {
+    usecase "Оплатити замовлення" as UC_Pay
+    usecase "Списати бонусні бали" as UC_UsePoints
+  }
+
+  package "Особистий кабінет" {
+    usecase "Переглянути історію\nбронювань" as UC_History
+    usecase "Редагувати профіль:\nконтакти, фото, вподобання" as UC_Profile
+    usecase "Придбати абонемент:\nразовий, місячний, корпоративний" as UC_Membership
+    usecase "Переглянути картку лояльності\nі бонусні бали" as UC_Loyalty
+    usecase "Переглянути персональні\nпропозиції" as UC_Offers
+    usecase "Переглянути сповіщення" as UC_Inbox
+  }
+
+  package "Адміністрування" {
+    usecase "Керувати центрами\nі залами" as UC_AdmCenters
+    usecase "Керувати секціями\nі тренерами" as UC_AdmSections
+    usecase "Керувати розкладом\nзанять" as UC_AdmSchedule
+    usecase "Керувати акціями,\nтарифами й абонементами" as UC_AdmPromo
+    usecase "Переглянути статистику" as UC_AdmStats
+    usecase "Запустити розсилку\nнагадувань вручну" as UC_AdmRemind
+  }
+
+  package "Сповіщення" {
+    usecase "Нарахувати бонусні бали" as UC_Award
+    usecase "Надіслати нагадування\nза 24 год і 2 год" as UC_Remind
+    usecase "Повідомити про нові\nсекції та акції" as UC_Announce
+  }
+}
+
+' --- Гість ---
+Guest --> UC_Catalog
+Guest --> UC_Map
+Guest --> UC_Login
+UC_Filter .> UC_Catalog : <<extend>>
+UC_Google .> UC_Login : <<extend>>
+UC_Google --> Google
+
+' --- Клієнт ---
+Client --> UC_Book
+Client --> UC_Cancel
+Client --> UC_History
+Client --> UC_Profile
+Client --> UC_Membership
+Client --> UC_Loyalty
+Client --> UC_Offers
+Client --> UC_Inbox
+
+UC_Book <|-- UC_Hall
+UC_Book <|-- UC_Group
+UC_Book <|-- UC_Personal
+UC_Book ..> UC_Check : <<include>>
+UC_Book ..> UC_Pay : <<include>>
+UC_Membership ..> UC_Pay : <<include>>
+UC_UsePoints .> UC_Pay : <<extend>>
+UC_Pay ..> UC_Award : <<include>>
+UC_Pay --> Payment
+
+' --- Адміністратор ---
+Admin --> UC_AdmCenters
+Admin --> UC_AdmSections
+Admin --> UC_AdmSchedule
+Admin --> UC_AdmPromo
+Admin --> UC_AdmStats
+Admin --> UC_AdmRemind
+UC_AdmRemind ..> UC_Remind : <<include>>
+UC_AdmSections ..> UC_Announce : <<include>>
+UC_AdmPromo ..> UC_Announce : <<include>>
+
+' --- Системні актори ---
+Cron --> UC_Remind
+UC_Remind --> Email
+UC_Announce --> Email
+UC_Award --> Email
+
+@enduml
