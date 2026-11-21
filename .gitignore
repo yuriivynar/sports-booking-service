@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files (only *.example files are committed)
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+
+# Private course materials: never pushed to GitHub
+docs/kursova_DPZSP.pdf
+docs/notes/
+
+# Markdown files stay local; README is the only exception
+*.md
+!/README.md
