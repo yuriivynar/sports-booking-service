@@ -20,13 +20,13 @@ export class UpdateProfileDto {
   @MaxLength(100)
   fullName?: string;
 
-  @ApiPropertyOptional({ example: '+380671234567', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '+380671234567', nullable: true })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @Matches(/^\+?[0-9 ()-]{7,20}$/, { message: 'Некоректний номер телефону' })
   phone?: string | null;
 
-  @ApiPropertyOptional({ example: 'ТОВ «Приклад»', nullable: true, maxLength: 120 })
+  @ApiPropertyOptional({ type: String, example: 'ТОВ «Приклад»', nullable: true, maxLength: 120 })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
   @IsString()

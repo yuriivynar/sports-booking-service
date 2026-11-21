@@ -5,3 +5,4 @@ dist
 coverage
 apps/api/prisma/migrations
 apps/api/src/generated
+apps/web/src/lib/api/schema.d.ts

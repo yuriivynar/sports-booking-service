@@ -76,6 +76,8 @@
    cp apps/web/.env.example apps/web/.env.local
    ```
 
+   Щоб вхід працював локально, додайте `http://localhost:3000/**` у Supabase → Authentication → URL Configuration → Redirect URLs.
+
 4. Створіть таблиці та заповніть базу демоданими (4 центри у Львові, зали, тренери, секції й розклад на 14 днів):
 
    ```bash
@@ -111,6 +113,7 @@
 | `pnpm --filter api db:seed`            | Додає демодані; повторний запуск лише доповнює розклад                     |
 | `pnpm --filter api db:seed:production` | Додає демодані в продакшн-базу (адреса з `apps/api/.env.production.local`) |
 | `pnpm --filter api db:studio`          | Відкриває Prisma Studio для перегляду даних                                |
+| `pnpm --filter web api:types`          | Оновлює TypeScript-типи API для сайту з OpenAPI (API має бути запущений)   |
 | `pnpm format`                          | Форматує код за допомогою Prettier                                         |
 
 ## CI/CD
