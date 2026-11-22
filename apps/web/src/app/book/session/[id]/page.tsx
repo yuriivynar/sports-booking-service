@@ -28,7 +28,14 @@ export default async function BookSessionPage({ params }: PageProps<'/book/sessi
   if (response.status === 404) notFound();
   const { data: owned } = await api.GET('/api/memberships');
   const memberships = (owned ?? [])
-    .filter((m) => m.status === 'ACTIVE')
+    // Only memberships that can pay for this session; the API checks the
+    // sport and the center and explains a refusal in the quote.
+    .filter(
+      (m) =>
+        m.status === 'ACTIVE' &&
+        m.visitsLeft !== 0 &&
+        (!quote || !m.endsAt || new Date(m.endsAt) > new Date(quote.startsAt)),
+    )
     .map((m) => ({
       id: m.id,
       label:
