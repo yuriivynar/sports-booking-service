@@ -1,4 +1,12 @@
-import type { AgeGroup, BookingStatus, BookingType, HallKind, SkillLevel } from './api';
+import type {
+  AgeGroup,
+  BookingStatus,
+  BookingType,
+  HallKind,
+  MembershipKind,
+  MembershipStatus,
+  SkillLevel,
+} from './api';
 
 /** Every center is in Lviv, so dates are always shown in Kyiv time. */
 export const TIME_ZONE = 'Europe/Kyiv';
@@ -98,4 +106,50 @@ export const BOOKING_TYPE_LABELS: Record<BookingType, string> = {
 /** "пт, 27 листопада" → "Пт, 27 листопада". CSS `capitalize` would raise every word. */
 export function upperFirst(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export const MEMBERSHIP_KIND_LABELS: Record<MembershipKind, string> = {
+  SINGLE: 'Разовий',
+  MONTHLY: 'Місячний',
+  CORPORATE: 'Корпоративний',
+};
+
+export const MEMBERSHIP_STATUS_LABELS: Record<MembershipStatus, string> = {
+  PENDING: 'Очікує оплати',
+  ACTIVE: 'Діє',
+  EXPIRED: 'Закінчився',
+  CANCELLED: 'Скасовано',
+};
+
+const dateFormatter = new Intl.DateTimeFormat('uk-UA', {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+/** "27 листопада 2026 р." */
+export function formatDate(value: string | Date): string {
+  return dateFormatter.format(new Date(value));
+}
+
+const relativeFormatter = new Intl.RelativeTimeFormat('uk-UA', { numeric: 'auto' });
+
+/** "5 хвилин тому", "вчора" — for notifications. */
+export function formatRelative(value: string | Date, now: number = Date.now()): string {
+  const seconds = Math.round((new Date(value).getTime() - now) / 1000);
+  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['second', 60],
+    ['minute', 60],
+    ['hour', 24],
+    ['day', 7],
+    ['week', 4.35],
+    ['month', 12],
+  ];
+  let amount = seconds;
+  for (const [unit, size] of steps) {
+    if (Math.abs(amount) < size) return relativeFormatter.format(Math.round(amount), unit);
+    amount /= size;
+  }
+  return relativeFormatter.format(Math.round(amount), 'year');
 }

@@ -49,3 +49,11 @@ export function apiErrorMessage(error: unknown, fallback: string): string {
   if (Array.isArray(message)) return message.join('. ');
   return message || fallback;
 }
+
+export type MembershipPlan = Schemas['MembershipPlanDto'];
+export type Membership = Schemas['MembershipDto'];
+export type Loyalty = Schemas['LoyaltyDto'];
+export type NotificationItem = Schemas['NotificationDto'];
+export type Offers = Schemas['OffersDto'];
+export type MembershipKind = Schemas['MembershipKind'];
+export type MembershipStatus = Schemas['MembershipStatus'];

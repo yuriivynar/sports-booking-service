@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { dateKey, formatPrice, formatTimeRange, pluralize, upperFirst } from './format';
+import {
+  dateKey,
+  formatPrice,
+  formatRelative,
+  formatTimeRange,
+  pluralize,
+  upperFirst,
+} from './format';
 
 describe('format', () => {
   it('formats kopecks as hryvnias', () => {
@@ -27,5 +34,13 @@ describe('format', () => {
   it('raises only the first letter of a date', () => {
     expect(upperFirst('пт, 27 листопада')).toBe('Пт, 27 листопада');
     expect(upperFirst('')).toBe('');
+  });
+
+  it('describes how long ago something happened', () => {
+    const now = Date.parse('2026-11-23T12:00:00Z');
+
+    expect(formatRelative('2026-11-23T11:55:00Z', now)).toBe('5 хвилин тому');
+    expect(formatRelative('2026-11-22T12:00:00Z', now)).toBe('учора');
+    expect(formatRelative('2026-11-23T12:00:00Z', now)).toBe('зараз');
   });
 });
