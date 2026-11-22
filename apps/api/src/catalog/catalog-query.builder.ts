@@ -15,7 +15,7 @@ const ORDER: Record<SectionSort, Prisma.SectionOrderByWithRelationInput[]> = {
 /** Relations every catalog card needs, including the nearest upcoming session. */
 export function sectionInclude(now: Date) {
   return {
-    sport: { select: { slug: true, name: true, icon: true } },
+    sport: { select: { slug: true, name: true, icon: true, photoUrl: true } },
     center: { select: { slug: true, name: true, address: true } },
     trainer: { select: { id: true, fullName: true } },
     sessions: {

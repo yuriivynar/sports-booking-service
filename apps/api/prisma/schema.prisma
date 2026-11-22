@@ -133,11 +133,13 @@ model User {
 // ---------- Catalog ----------
 
 model Sport {
-  id   String @id @default(uuid(7)) @db.Uuid
-  slug String @unique
-  name String
+  id       String  @id @default(uuid(7)) @db.Uuid
+  slug     String  @unique
+  name     String
   /// lucide-react icon name used by the web app.
-  icon String
+  icon     String
+  /// Cover photo for catalog cards; also used for sections of this sport.
+  photoUrl String? @map("photo_url")
 
   halls      Hall[]           @relation("HallSports")
   trainers   Trainer[]        @relation("TrainerSports")

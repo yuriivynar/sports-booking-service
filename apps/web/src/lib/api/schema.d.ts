@@ -200,6 +200,8 @@ export interface components {
              * @example flower-2
              */
             icon: string;
+            /** @description Cover photo URL */
+            photoUrl: string | null;
         };
         UserProfileDto: {
             /** Format: uuid */

@@ -6,7 +6,10 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 const PROFILE_INCLUDE = {
-  preferredSports: { select: { slug: true, name: true, icon: true }, orderBy: { name: 'asc' } },
+  preferredSports: {
+    select: { slug: true, name: true, icon: true, photoUrl: true },
+    orderBy: { name: 'asc' },
+  },
 } as const;
 
 @Injectable()

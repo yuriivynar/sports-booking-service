@@ -3,8 +3,8 @@ import { dateKey, formatPrice, formatTimeRange, pluralize } from './format';
 
 describe('format', () => {
   it('formats kopecks as hryvnias', () => {
-    expect(formatPrice(25000).replace(/\s/g, ' ')).toBe('250 ₴');
-    expect(formatPrice(150000).replace(/\s/g, ' ')).toBe('1 500 ₴');
+    expect(formatPrice(25000).replace(/\s/g, ' ')).toBe('250 грн');
+    expect(formatPrice(150000).replace(/\s/g, ' ')).toBe('1 500 грн');
   });
 
   it('shows times in Kyiv, whatever the server time zone', () => {

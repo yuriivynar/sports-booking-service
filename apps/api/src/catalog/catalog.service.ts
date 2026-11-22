@@ -23,7 +23,7 @@ import type { SportDto } from './dto/sport.dto.js';
 /** How far ahead the section page shows the schedule. */
 const SCHEDULE_DAYS = 14;
 
-const SPORT_SELECT = { select: { slug: true, name: true, icon: true } } as const;
+const SPORT_SELECT = { select: { slug: true, name: true, icon: true, photoUrl: true } } as const;
 const CENTER_REF_SELECT = { select: { slug: true, name: true, address: true } } as const;
 const SPORTS_BY_NAME = { ...SPORT_SELECT, orderBy: { name: 'asc' } } as const;
 
