@@ -3,7 +3,7 @@
 import { Bell, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,12 +25,15 @@ export function NotificationBell() {
   const router = useRouter();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
+  // Each load gets a number; an older response that arrives late is ignored.
+  const latest = useRef(0);
 
   const load = useCallback(async () => {
+    const request = ++latest.current;
     const result = await browserApi()
       .then((api) => api.GET('/api/notifications'))
       .catch(() => null);
-    if (!result?.data) return;
+    if (!result?.data || request !== latest.current) return;
     setItems(result.data.items.slice(0, 8));
     setUnread(result.data.unread);
   }, []);
@@ -38,10 +41,18 @@ export function NotificationBell() {
   useEffect(() => {
     // Not awaited: the first load fills the badge; later loads poll.
     const first = setTimeout(() => void load(), 0);
-    const timer = setInterval(() => void load(), POLL_MS);
+    // A hidden tab does not poll; coming back refreshes at once.
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') void load();
+    }, POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       clearTimeout(first);
       clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [load]);
 
@@ -106,7 +117,10 @@ export function NotificationBell() {
             >
               <span className="flex w-full items-center gap-2 font-medium">
                 {!item.readAt && (
-                  <span aria-label="нове" className="size-2 shrink-0 rounded-full bg-primary" />
+                  <>
+                    <span aria-hidden className="size-2 shrink-0 rounded-full bg-primary" />
+                    <span className="sr-only">Нове: </span>
+                  </>
                 )}
                 <span className="truncate">{item.title}</span>
               </span>
