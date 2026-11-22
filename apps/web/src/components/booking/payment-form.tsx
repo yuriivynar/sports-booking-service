@@ -51,30 +51,42 @@ export function PaymentForm({ booking }: { booking: Booking }) {
   const secondsLeft = useSecondsLeft(booking.payBefore);
   const expired = secondsLeft === 0;
 
+  // When the hold runs out, reload: the server releases it and the page
+  // shows the real status instead of a dead form.
+  useEffect(() => {
+    if (expired) router.refresh();
+  }, [expired, router]);
+
   async function pay(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const [month, year] = expiry.split('/');
     setPending(true);
     setDeclined(null);
-    const { data, error, response } = await (
-      await browserApi()
-    ).POST('/api/bookings/{id}/pay', {
-      params: { path: { id: booking.id } },
-      body: {
-        cardNumber: card,
-        expMonth: Number(month),
-        expYear: 2000 + Number(year),
-        cvc: String(form.get('cvc') ?? ''),
-        holder: String(form.get('holder') ?? '').trim(),
-      },
-    });
+    const result = await browserApi()
+      .then((api) =>
+        api.POST('/api/bookings/{id}/pay', {
+          params: { path: { id: booking.id } },
+          body: {
+            cardNumber: card,
+            expMonth: Number(month),
+            expYear: 2000 + Number(year),
+            cvc: String(form.get('cvc') ?? ''),
+            holder: String(form.get('holder') ?? '').trim(),
+          },
+        }),
+      )
+      .catch(() => null);
     setPending(false);
 
-    if (!data) {
-      const message = apiErrorMessage(error, 'Оплата не пройшла');
+    if (!result) {
+      toast.error('API недоступний. Спробуйте ще раз');
+      return;
+    }
+    if (!result.data) {
+      const message = apiErrorMessage(result.error, 'Оплата не пройшла');
       // 402: the bank said no, the booking still waits; other errors end the attempt.
-      if (response.status === 402) setDeclined(message);
+      if (result.response.status === 402) setDeclined(message);
       else {
         toast.error(message);
         router.refresh();

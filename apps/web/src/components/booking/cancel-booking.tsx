@@ -23,16 +23,18 @@ export function CancelBooking({
 
   async function cancel() {
     setPending(true);
-    const { data, error } = await (
-      await browserApi()
-    ).POST('/api/bookings/{id}/cancel', {
-      params: { path: { id: booking.id } },
-      body: {},
-    });
+    // A network failure rejects; treat it like any other error so the buttons come back.
+    const result = await browserApi()
+      .then((api) =>
+        api.POST('/api/bookings/{id}/cancel', { params: { path: { id: booking.id } }, body: {} }),
+      )
+      .catch(() => null);
     setPending(false);
     setAsking(false);
-    if (!data) {
-      toast.error(apiErrorMessage(error, 'Не вдалося скасувати'));
+    if (!result?.data) {
+      toast.error(
+        result ? apiErrorMessage(result.error, 'Не вдалося скасувати') : 'API недоступний',
+      );
       return;
     }
     toast.success(refund ? 'Скасовано. Гроші повернуться на картку' : 'Бронювання скасовано');
