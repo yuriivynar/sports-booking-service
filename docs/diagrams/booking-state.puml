@@ -1,0 +1,40 @@
+@startuml booking-state
+' Діаграма станів бронювання (патерн State: один клас на стан).
+' Згенерувати PNG: docker run --rm -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/booking-state.puml
+
+skinparam dpi 150
+skinparam defaultFontName "DejaVu Sans"
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam ArrowColor #4A5568
+skinparam state {
+  BorderColor #3B6EA8
+  BackgroundColor #EEF4FF
+}
+
+title SportHub — життєвий цикл бронювання
+
+[*] --> PENDING : book()\n[ціна > 0]
+[*] --> CONFIRMED : book()\n[ціна = 0: абонемент,\nбали, Premium-басейн]
+
+state "PENDING\n«Очікує оплати»" as PENDING : PendingState\nмісце утримується 15 хв\nдії: pay, cancel
+state "CONFIRMED\n«Підтверджено»" as CONFIRMED : ConfirmedState\nбали нараховано\nдії: cancel
+state "CANCELLED\n«Скасовано»" as CANCELLED #F5F5F5 : CancelledState\nкінцевий стан
+state "COMPLETED\n«Завершено»" as COMPLETED #E8F5E9 : CompletedState\nкінцевий стан
+
+PENDING --> CONFIRMED : pay()\n[оплата успішна,\nзаняття не почалося]
+PENDING --> PENDING : pay() відхилено (402)
+PENDING --> CANCELLED : cancel()\n[до початку]
+PENDING --> CANCELLED : минуло 15 хв\n(releaseExpiredHolds)
+CONFIRMED --> CANCELLED : cancel()\n[≥ 2 год до початку]\n/ повернення коштів, балів, візиту
+CONFIRMED --> COMPLETED : complete()\n[заняття завершилося]
+
+CANCELLED --> [*]
+COMPLETED --> [*]
+
+note right of CANCELLED
+  Будь-який інший перехід кидає
+  ConflictException (409):
+  «Неможливо … у статусі …»
+end note
+@enduml
