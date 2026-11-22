@@ -1,0 +1,98 @@
+@startuml booking-sequence
+' Діаграма послідовності: бронювання групового заняття та оплата.
+' Згенерувати PNG: docker run --rm -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/booking-sequence.puml
+
+skinparam dpi 150
+skinparam defaultFontName "DejaVu Sans"
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam sequenceMessageAlign left
+skinparam BoxPadding 8
+skinparam sequence {
+  ArrowColor #4A5568
+  LifeLineBorderColor #A0AEC0
+  ParticipantBorderColor #3B6EA8
+  ParticipantBackgroundColor #EEF4FF
+  GroupBorderColor #A0AEC0
+}
+
+title SportHub — бронювання та оплата (Facade координує патерни)
+
+actor "Клієнт" as user
+participant "Next.js\n(сайт)" as web
+participant "BookingsController" as ctrl
+participant "BookingFacade\n<<Facade>>" as facade #FFE8D6
+participant "GroupSessionCreator\n<<Factory Method>>" as creator #E3F2FD
+participant "BookingValidationChain\n<<Chain of Resp.>>" as chain #E8F5E9
+participant "PricingService\n(Decorator + Strategy)" as pricing #F3E5F5
+database "PostgreSQL" as db
+participant "PaymentGateway\n<<Adapter>>" as gateway #FFF8E1
+participant "EventBus\n<<Observer>>" as bus #ECEFF1
+
+== Бронювання ==
+user -> web : «Записатися»
+web -> ctrl : POST /api/bookings\n{ type: GROUP_SESSION, groupSessionId }
+ctrl -> facade : book(userId, request)
+facade -> db : releaseExpiredHolds()
+facade -> creator : prepare(request)
+creator -> db : findUnique(groupSession)
+creator --> facade : GroupSessionDraft
+facade -> chain : validate(draft, user, membership)
+note right of chain
+  FutureStart → OpeningHours → Capacity
+  → Membership → Availability → NoDuplicate
+  перша помилка зупиняє ланцюг (400/409)
+end note
+chain --> facade : ok
+facade -> pricing : quote(draft, buyer)
+note right of pricing
+  BonusPoints(Loyalty(Promotion(
+    Membership(BasePrice))))
+  LoyaltyPolicy обирається за рівнем
+end note
+pricing --> facade : PriceQuote + priceBreakdown
+
+group Одна транзакція БД
+  facade -> db : INSERT bookings (PENDING)
+  facade -> db : draft.reserve(): UPDATE group_sessions\nSET booked_count = booked_count + 1\nWHERE booked_count < capacity
+  alt оновлено 0 рядків (місце забрали)
+    db --> facade : count = 0
+    facade --> ctrl : 409 «Вільних місць більше немає»\n(ROLLBACK)
+  end
+  facade -> db : бали (REDEMPTION), візит абонемента
+end
+facade -> bus : publish(booking.created)
+facade --> ctrl : BookingDto (PENDING, payBefore)
+ctrl --> web : 201 Created
+web --> user : форма оплати (15 хв)
+
+== Оплата ==
+user -> web : картка
+web -> ctrl : POST /api/bookings/{id}/pay
+ctrl -> facade : pay(userId, id, card)
+facade -> facade : BookingLifecycle.pay()\n<<State>>: дозволено лише з PENDING
+facade -> db : INSERT payments (PENDING)
+facade -> gateway : charge(amount, card)
+note right of gateway
+  SimulatedPaymentAdapter перекладає
+  виклик у SDK банку (SimulatedAcquirer)
+  поза транзакцією БД
+end note
+alt картку відхилено
+  gateway --> facade : { ok: false, reason }
+  facade -> db : payments.status = FAILED
+  facade -> bus : publish(payment.failed)
+  facade --> ctrl : 402 Payment Required
+else успіх
+  gateway --> facade : { ok: true, providerRef }
+  group Одна транзакція БД
+    facade -> db : UPDATE bookings SET status = CONFIRMED\nWHERE status = PENDING
+    facade -> db : payments.status = SUCCEEDED
+    facade -> db : бали BOOKING_REWARD
+  end
+  facade -> bus : publish(booking.confirmed)
+  facade --> ctrl : BookingDto (CONFIRMED)
+  ctrl --> web : 200 OK
+  web --> user : конфеті, квиток
+end
+@enduml

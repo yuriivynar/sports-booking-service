@@ -98,6 +98,32 @@
 | Документація API (Swagger)  | http://localhost:4000/api/docs   |
 | Mailpit (перехоплені листи) | http://localhost:8025            |
 
+## Архітектура та патерни
+
+API складається з модулів NestJS. Бронювання проходить через `BookingFacade`, який координує решту патернів:
+
+| Патерн                  | Де в коді                                           | Навіщо                                                                 |
+| ----------------------- | --------------------------------------------------- | ---------------------------------------------------------------------- |
+| Singleton               | `apps/api/src/prisma/prisma.service.ts`             | Один клієнт БД і пул з'єднань через DI                                 |
+| Builder                 | `apps/api/src/catalog/catalog-query.builder.ts`     | Пошук секцій за фільтрами                                              |
+| Factory Method          | `apps/api/src/bookings/creators/`                   | Свій творець і «чернетка» для кожного типу бронювання                  |
+| Chain of Responsibility | `apps/api/src/bookings/validation/`                 | Перевірки: час, години роботи, місця, абонемент, зайнятість, дублікати |
+| State                   | `apps/api/src/bookings/state/booking-state.ts`      | Дозволені переходи PENDING → CONFIRMED → COMPLETED / CANCELLED         |
+| Decorator               | `apps/api/src/bookings/pricing/price-calculator.ts` | Ціна: абонемент, акція, картка, бали та розбивка для користувача       |
+| Strategy                | `apps/api/src/loyalty/loyalty-policy.ts`            | Правила карток Standard, Premium, Corporate                            |
+| Adapter                 | `apps/api/src/payments/`, `apps/api/src/storage/`   | Імітований банк і Supabase Storage за нашими інтерфейсами              |
+| Facade                  | `apps/api/src/bookings/booking.facade.ts`           | Один вхід: перевірити → створити → оцінити → транзакція → оплатити     |
+| Observer                | `apps/api/src/events/event-bus.ts`                  | Доменні події бронювань для сповіщень                                  |
+
+Від подвійного бронювання захищає сама база: exclusion constraints на `occupancies` і умовний `UPDATE` лічильника місць.
+
+Діаграми (PlantUML, `docs/diagrams/`):
+
+- [Діаграма класів із патернами](docs/diagrams/class-diagram.png)
+- [Послідовність бронювання та оплати](docs/diagrams/booking-sequence.png)
+- [Стани бронювання](docs/diagrams/booking-state.png)
+- [Варіанти використання](docs/diagrams/use-case.png) · [ER-діаграма](docs/diagrams/er-diagram.png)
+
 ## Дизайн
 
 - **Дизайн-система** на токенах (кольори за ролями, шрифти, радіуси, тіні, анімації) у `apps/web/src/app/globals.css`; жива документація — сторінка `/design`.
