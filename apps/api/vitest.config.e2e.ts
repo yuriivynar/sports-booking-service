@@ -14,6 +14,8 @@ export default defineConfig({
       DIRECT_URL: TEST_DATABASE_URL,
       SUPABASE_URL: TEST_SUPABASE_URL,
       ADMIN_EMAILS: TEST_ADMIN_EMAIL,
+      // Tests never send real email; notification tests replace the sender.
+      EMAIL_DRIVER: 'log',
     },
     globalSetup: ['./test/global-setup.ts'],
     // Test files share one database, so run them one after another.
