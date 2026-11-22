@@ -264,6 +264,17 @@ export default function DesignSystemPage() {
               />
             </div>
             <PaymentForm booking={{ ...DEMO_BOOKING, status: 'PENDING' }} />
+            {/* The narrow checkout card with a membership: long label, free total. */}
+            <div className="max-w-sm rounded-3xl border bg-card p-6">
+              <PriceBreakdown
+                lines={[
+                  { kind: 'BASE', label: 'Базова ціна', amount: 25_000 },
+                  { kind: 'MEMBERSHIP', label: 'Абонемент «Місячний: 8 занять»', amount: -25_000 },
+                ]}
+                finalPrice={0}
+                pointsEarned={0}
+              />
+            </div>
           </div>
         </section>
 

@@ -40,14 +40,22 @@ export function PriceBreakdown({
           return (
             <li
               key={`${line.kind}-${index}`}
-              className="reveal flex items-center justify-between gap-3"
+              className="reveal flex items-start justify-between gap-3"
               style={{ animationDelay: `${index * 60}ms` }}
             >
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Icon className={cn('size-4 shrink-0', reduction && 'text-ink')} aria-hidden />
+              <span className="flex min-w-0 items-start gap-2 text-muted-foreground">
+                <Icon
+                  className={cn('mt-0.5 size-4 shrink-0', reduction && 'text-ink')}
+                  aria-hidden
+                />
                 {line.label}
               </span>
-              <span className={cn('font-medium tabular-nums', reduction && 'text-ink')}>
+              <span
+                className={cn(
+                  'shrink-0 font-medium whitespace-nowrap tabular-nums',
+                  reduction && 'text-ink',
+                )}
+              >
                 {reduction ? '−' : ''}
                 {formatPrice(Math.abs(line.amount))}
               </span>
@@ -55,9 +63,15 @@ export function PriceBreakdown({
           );
         })}
       </ul>
-      <div className="flex items-end justify-between border-t pt-3">
-        <span className="font-semibold">До сплати</span>
-        <span className="font-display text-3xl font-black tabular-nums">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t pt-3">
+        <span className="font-semibold whitespace-nowrap">До сплати</span>
+        <span
+          className={cn(
+            'font-display font-black whitespace-nowrap tabular-nums',
+            // The word is much wider than a price; it must fit a narrow card.
+            finalPrice === 0 ? 'text-2xl' : 'text-3xl',
+          )}
+        >
           {finalPrice === 0 ? 'Безкоштовно' : formatPrice(finalPrice)}
         </span>
       </div>
