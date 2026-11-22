@@ -37,13 +37,16 @@ export function SessionForm({
   const { pending, run } = useAdminAction();
   const active = sections.filter((s) => s.isActive);
   const openHalls = halls.filter((h) => h.isActive);
+  // The section's trainer is the default only while they still work here.
+  const defaultTrainer = (section?: AdminSection) =>
+    trainers.find((t) => t.id === section?.trainer?.id && t.isActive)?.id ?? '';
   const [values, setValues] = useState(() => {
     const tomorrow = new Date(Date.now() + 86_400_000);
     const first = active[0];
     return {
       sectionId: first?.id ?? '',
       hallId: openHalls[0]?.id ?? '',
-      trainerId: first?.trainer?.id ?? '',
+      trainerId: defaultTrainer(first),
       startsAt: `${toKyivInput(tomorrow).slice(0, 10)}T18:00`,
       durationMinutes: 60,
       capacity: first?.capacity ?? 10,
@@ -54,7 +57,7 @@ export function SessionForm({
 
   function pickSection(sectionId: string) {
     const section = active.find((s) => s.id === sectionId);
-    set({ sectionId, trainerId: section?.trainer?.id ?? '', capacity: section?.capacity ?? 10 });
+    set({ sectionId, trainerId: defaultTrainer(section), capacity: section?.capacity ?? 10 });
   }
 
   async function submit(event: FormEvent) {
@@ -203,7 +206,14 @@ export function SessionForm({
  * Calls a session off. Asks for the reason in place (it goes into every
  * user's notice); the API cancels the bookings with full refunds.
  */
-export function CancelSession({ session }: { session: AdminSession }) {
+export function CancelSession({
+  session,
+  retry = false,
+}: {
+  session: AdminSession;
+  /** The session is cancelled but some bookings were not: try them again. */
+  retry?: boolean;
+}) {
   const { pending, run } = useAdminAction();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
@@ -217,15 +227,16 @@ export function CancelSession({ session }: { session: AdminSession }) {
           params: { path: { id: session.id } },
           body: { reason },
         }),
-      session.activeBookings > 0
-        ? `Заняття скасовано, ${pluralize(session.activeBookings, ['запис', 'записи', 'записів'])} повернено`
-        : 'Заняття скасовано',
+      (data) =>
+        data.cancelledBookings > 0
+          ? `Заняття скасовано, повернено ${pluralize(data.cancelledBookings, ['запис', 'записи', 'записів'])}`
+          : 'Заняття скасовано',
     );
     if (!result) return;
     setOpen(false);
     if (result.stillActive > 0) {
       toast.warning(
-        `${pluralize(result.stillActive, ['запис', 'записи', 'записів'])} не вдалося скасувати. Натисніть «Скасувати» ще раз`,
+        `${pluralize(result.stillActive, ['запис', 'записи', 'записів'])} не вдалося скасувати. Натисніть «Повторити» або дочекайтеся регламентного завдання`,
       );
     }
   }
@@ -233,7 +244,7 @@ export function CancelSession({ session }: { session: AdminSession }) {
   if (!open) {
     return (
       <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setOpen(true)}>
-        <Ban /> Скасувати
+        <Ban /> {retry ? 'Повторити скасування' : 'Скасувати'}
       </Button>
     );
   }
@@ -327,10 +338,9 @@ export function ScheduleManager({
                 <span className="text-sm tabular-nums">
                   {session.bookedCount}/{session.capacity} місць
                 </span>
-                {session.isCancelled ? (
-                  <Badge variant="outline">Скасовано</Badge>
-                ) : (
-                  <CancelSession session={session} />
+                {session.isCancelled && <Badge variant="outline">Скасовано</Badge>}
+                {(!session.isCancelled || session.activeBookings > 0) && (
+                  <CancelSession session={session} retry={session.isCancelled} />
                 )}
               </li>
             ))}

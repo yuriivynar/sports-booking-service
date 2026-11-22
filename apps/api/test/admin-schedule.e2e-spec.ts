@@ -261,4 +261,54 @@ describe('Admin schedule (e2e)', () => {
     await admin.post(`/api/admin/sessions/${session.id}/cancel`, { reason: 'Запізно' }).expect(409);
     await admin.post(`/api/admin/sessions/${randomUUID()}/cancel`, { reason: 'Немає' }).expect(404);
   });
+
+  it('finishes stuck cancellations and refunds in the maintenance job', async () => {
+    const single = async (days: number) =>
+      (await schedule({ startsAt: at(days, 12) }).expect(201)).body[0].id as string;
+    const runJob = async () => (await admin.post('/api/admin/jobs/run').expect(200)).body;
+
+    // A session marked cancelled whose booking was never cancelled (the function stopped).
+    const stuckSession = await single(20);
+    const stuck = await bookAndPay(stuckSession);
+    await prisma.groupSession.update({ where: { id: stuckSession }, data: { isCancelled: true } });
+
+    // A cancelled booking whose refund never ran.
+    const unrefunded = await bookAndPay(await single(21));
+    await prisma.booking.update({
+      where: { id: unrefunded.bookingId },
+      data: { status: 'CANCELLED', cancelledAt: new Date(Date.now() - 20 * 60_000) },
+    });
+
+    // A finished booking of a cancelled session: never completed, never rewarded.
+    const pastSession = await single(22);
+    const past = await bookAndPay(pastSession);
+    const ago = {
+      startsAt: new Date(Date.now() - 3 * HOUR),
+      endsAt: new Date(Date.now() - 2 * HOUR),
+    };
+    await prisma.groupSession.update({
+      where: { id: pastSession },
+      data: { ...ago, isCancelled: true },
+    });
+    await prisma.booking.update({ where: { id: past.bookingId }, data: ago });
+
+    const run = await runJob();
+    expect(run.sessionBookingsCancelled).toBeGreaterThanOrEqual(1);
+    expect(run.refundsRetried).toBeGreaterThanOrEqual(1);
+
+    const statusOf = async (bookingId: string) => ({
+      booking: (await prisma.booking.findUniqueOrThrow({ where: { id: bookingId } })).status,
+      payment: (await prisma.payment.findFirstOrThrow({ where: { bookingId } })).status,
+    });
+    expect(await statusOf(stuck.bookingId)).toEqual({ booking: 'CANCELLED', payment: 'REFUNDED' });
+    expect(await statusOf(unrefunded.bookingId)).toEqual({
+      booking: 'CANCELLED',
+      payment: 'REFUNDED',
+    });
+    expect((await statusOf(past.bookingId)).booking).toBe('CONFIRMED');
+
+    // Nothing is refunded twice on the next run.
+    const again = await runJob();
+    expect(again.refundsRetried).toBe(0);
+  });
 });

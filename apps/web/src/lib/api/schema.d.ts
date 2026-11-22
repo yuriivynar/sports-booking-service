@@ -1215,6 +1215,10 @@ export interface components {
     JobRunDto: {
       /** @description Unpaid bookings whose hold ran out */
       releasedHolds: number;
+      /** @description Bookings of center-cancelled sessions whose cancellation had not finished */
+      sessionBookingsCancelled: number;
+      /** @description Refunds of cancelled bookings that were missing and retried */
+      refundsRetried: number;
       /** @description Bookings marked as completed; their points are credited */
       completedBookings: number;
       /** @description Memberships past their end date */

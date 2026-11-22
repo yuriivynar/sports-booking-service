@@ -5,6 +5,14 @@ export class JobRunDto {
   @ApiProperty({ description: 'Unpaid bookings whose hold ran out' })
   releasedHolds: number;
 
+  @ApiProperty({
+    description: 'Bookings of center-cancelled sessions whose cancellation had not finished',
+  })
+  sessionBookingsCancelled: number;
+
+  @ApiProperty({ description: 'Refunds of cancelled bookings that were missing and retried' })
+  refundsRetried: number;
+
   @ApiProperty({ description: 'Bookings marked as completed; their points are credited' })
   completedBookings: number;
 

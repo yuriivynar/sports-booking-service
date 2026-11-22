@@ -9,6 +9,8 @@ import { browserApi } from '@/lib/api/browser';
 
 const LINES: { key: keyof JobRun; label: string }[] = [
   { key: 'releasedHolds', label: 'Звільнено неоплачених утримань' },
+  { key: 'sessionBookingsCancelled', label: 'Дозавершено скасувань занять' },
+  { key: 'refundsRetried', label: 'Повторено повернень коштів' },
   { key: 'completedBookings', label: 'Завершено занять (бали нараховано)' },
   { key: 'expiredMemberships', label: 'Абонементів, що закінчилися' },
   { key: 'reminders24h', label: 'Нагадувань за добу' },

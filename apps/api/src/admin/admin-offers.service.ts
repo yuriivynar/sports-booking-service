@@ -11,7 +11,7 @@ import {
   postgresErrorCode,
 } from '../common/database-errors.js';
 import { EventBus } from '../events/event-bus.js';
-import type { MembershipKind, Prisma } from '../generated/prisma/client.js';
+import { type MembershipKind, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { type RemovalDto, RemovalResult } from './dto/admin-catalog.dto.js';
 import type {
@@ -110,6 +110,7 @@ export class AdminOffersService {
       startsAt: row.startsAt,
       endsAt: row.endsAt,
       sport: row.sport && { id: row.sport.id, slug: row.sport.slug, name: row.sport.name },
+      centerName: row.center?.name ?? null,
     });
   }
 
@@ -134,12 +135,21 @@ export class AdminOffersService {
   }
 
   /**
-   * Changes apply to new purchases. A membership already bought keeps
-   * the visits and the period it was issued with.
+   * A paid membership keeps the visits and the period it was issued with.
+   * An unpaid one is paid at the plan's current price. The kind of a plan
+   * that was sold cannot change: its memberships carry that kind.
    */
   async updatePlan(id: string, { sportSlug, ...dto }: UpdatePlanDto): Promise<AdminPlanDto> {
-    const current = await this.prisma.membershipPlan.findUnique({ where: { id } });
+    const current = await this.prisma.membershipPlan.findUnique({
+      where: { id },
+      include: { _count: { select: { memberships: true } } },
+    });
     if (!current) throw new NotFoundException('Тариф не знайдено');
+    if (dto.kind && dto.kind !== current.kind && current._count.memberships > 0) {
+      throw new BadRequestException(
+        'Тариф уже купували, тому його вид змінити не можна. Створіть новий тариф',
+      );
+    }
     checkPlanTerms(
       dto.kind ?? current.kind,
       dto.durationDays === undefined ? current.durationDays : dto.durationDays,
@@ -191,6 +201,10 @@ export class AdminOffersService {
     try {
       return await work();
     } catch (error) {
+      // A required field sent as null passes @IsOptional and stops at Prisma.
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestException('Обовʼязкові поля не можуть бути порожніми');
+      }
       const code = postgresErrorCode(error);
       if (code === PG_UNIQUE_VIOLATION) throw new ConflictException('Така назва вже є');
       if (code === PG_CHECK_VIOLATION) {
