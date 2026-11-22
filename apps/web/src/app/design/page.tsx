@@ -1,5 +1,15 @@
 import { ArrowRight, Heart } from 'lucide-react';
 import type { Metadata } from 'next';
+import {
+  BarList,
+  ChartCard,
+  DailyColumns,
+  MeterList,
+  RevenueArea,
+  SegmentedBar,
+  StatTile,
+} from '@/components/admin/charts';
+import { MaintenanceButton } from '@/components/admin/maintenance-button';
 import { BookingCard } from '@/components/booking/booking-card';
 import { BookingStatusBadge } from '@/components/booking/booking-status-badge';
 import { PaymentForm } from '@/components/booking/payment-form';
@@ -41,6 +51,19 @@ const DEMO_BOOKING: Booking = {
   createdAt: '2026-11-23T08:00:00.000Z',
   allowedActions: [],
 };
+
+/** Thirty demo days with a weekly rhythm; fixed, so the page renders the same every time. */
+const DEMO_DAYS = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date(Date.UTC(2026, 9, 24 + i)).toISOString().slice(0, 10);
+  const weekend = [5, 6].includes(i % 7);
+  const bookings = (weekend ? 14 : 8) + ((i * 7) % 5) + Math.floor(i / 6);
+  return {
+    date,
+    bookings,
+    cancelled: i % 4 === 0 ? 2 : i % 3 === 0 ? 1 : 0,
+    revenue: bookings * 23_500,
+  };
+});
 
 const COLORS = [
   {
@@ -242,6 +265,90 @@ export default function DesignSystemPage() {
             </div>
             <PaymentForm booking={{ ...DEMO_BOOKING, status: 'PENDING' }} />
           </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold">Адмінка: статистика</h2>
+          <p className="max-w-2xl text-muted-foreground">
+            Демо-дані. Палітра графіків — окремі токени --viz-*, перевірені на розрізнення при
+            дальтонізмі й контраст для світлої та темної тем; під кожним графіком є таблиця.
+          </p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <StatTile label="Виторг" value="96 820 грн" hint="Без повернених оплат" />
+            <StatTile label="Бронювання" value="412" />
+            <StatTile label="Скасовано" value="23" />
+            <StatTile label="Активні клієнти" value="138" />
+            <StatTile label="Середній чек" value="235 грн" />
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ChartCard
+              title="Бронювання по днях"
+              subtitle="За датою створення"
+              table={{
+                columns: ['День', 'Бронювання', 'Скасовані'],
+                rows: DEMO_DAYS.map((d) => [d.date, d.bookings, d.cancelled]),
+              }}
+            >
+              <DailyColumns data={DEMO_DAYS} />
+            </ChartCard>
+            <ChartCard
+              title="Виторг по днях, грн"
+              table={{
+                columns: ['День', 'Копійки'],
+                rows: DEMO_DAYS.map((d) => [d.date, d.revenue]),
+              }}
+            >
+              <RevenueArea data={DEMO_DAYS} />
+            </ChartCard>
+            <ChartCard
+              title="Заповненість групових занять"
+              table={{ columns: ['Центр', '%'], rows: [['SportHub Центр', 78]] }}
+            >
+              <MeterList
+                items={[
+                  { label: 'SportHub Центр', share: 0.78, detail: '312 з 400' },
+                  { label: 'SportHub Сихів', share: 0.54, detail: '162 з 300' },
+                  { label: 'SportHub Левандівка', share: 0.31, detail: '62 з 200' },
+                ]}
+              />
+            </ChartCard>
+            <ChartCard
+              title="Популярні види спорту"
+              table={{ columns: ['Вид спорту', 'Записів'], rows: [['Йога', 96]] }}
+            >
+              <BarList
+                items={[
+                  { label: 'Йога', value: 96 },
+                  { label: 'Плавання', value: 74 },
+                  { label: 'Фітнес', value: 51 },
+                  { label: 'Бокс', value: 22 },
+                ]}
+              />
+            </ChartCard>
+            <ChartCard
+              title="Клієнти за рівнем лояльності"
+              table={{ columns: ['Рівень', 'Клієнтів'], rows: [['Standard', 112]] }}
+            >
+              <SegmentedBar
+                parts={[
+                  { label: 'Standard', value: 112 },
+                  { label: 'Premium', value: 31 },
+                  { label: 'Corporate', value: 9 },
+                ]}
+              />
+            </ChartCard>
+          </div>
+          <MaintenanceButton
+            initial={{
+              releasedHolds: 2,
+              completedBookings: 14,
+              expiredMemberships: 1,
+              reminders24h: 9,
+              reminders2h: 4,
+              startedAt: '2026-11-25T09:00:00.000Z',
+              durationMs: 812,
+            }}
+          />
         </section>
 
         <section className="space-y-4">

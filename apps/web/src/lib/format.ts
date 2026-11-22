@@ -1,5 +1,6 @@
 import type {
   AgeGroup,
+  LoyaltyTier,
   BookingStatus,
   BookingType,
   HallKind,
@@ -152,4 +153,56 @@ export function formatRelative(value: string | Date, now: number = Date.now()): 
     amount /= size;
   }
   return relativeFormatter.format(Math.round(amount), 'year');
+}
+
+export const TIER_LABELS: Record<LoyaltyTier, string> = {
+  STANDARD: 'Standard',
+  PREMIUM: 'Premium',
+  CORPORATE: 'Corporate',
+};
+
+const offsetFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: TIME_ZONE,
+  timeZoneName: 'longOffset',
+});
+
+function kyivOffsetMinutes(at: Date): number {
+  const zone = offsetFormatter.formatToParts(at).find((part) => part.type === 'timeZoneName');
+  const match = /GMT([+-])(\d{2}):(\d{2})/.exec(zone?.value ?? '');
+  if (!match) return 0;
+  const minutes = Number(match[2]) * 60 + Number(match[3]);
+  return match[1] === '-' ? -minutes : minutes;
+}
+
+/**
+ * Reads a `datetime-local` value ("2026-11-27T18:00") as Kyiv wall-clock
+ * time, whatever the browser's own time zone. Null for anything else.
+ */
+export function kyivInputToDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return null;
+  const [year, month, day, hour, minute] = match.slice(1).map(Number);
+  const asIfUtc = Date.UTC(year, month - 1, day, hour, minute);
+  // Guess with the offset at that moment, then correct once across a DST switch.
+  let time = asIfUtc - kyivOffsetMinutes(new Date(asIfUtc)) * 60_000;
+  time = asIfUtc - kyivOffsetMinutes(new Date(time)) * 60_000;
+  return new Date(time);
+}
+
+const inputFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** The opposite of kyivInputToDate: a value for a `datetime-local` input. */
+export function toKyivInput(value: string | Date): string {
+  const parts = Object.fromEntries(
+    inputFormatter.formatToParts(new Date(value)).map((part) => [part.type, part.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }

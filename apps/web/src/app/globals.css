@@ -170,6 +170,29 @@
   --sidebar-ring: oklch(0.705 0.213 47.604);
 }
 
+/*
+ * Chart palette (admin stats). Categorical slots 1-3 and a blue meter track,
+ * validated for colour-blind separation and contrast against the card
+ * surface in each theme; dark values are their own steps, not a flip.
+ */
+.viz {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-track: #cde2fb;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+}
+
+.dark .viz {
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-track: #0d366b;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
