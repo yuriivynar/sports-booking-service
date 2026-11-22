@@ -144,9 +144,9 @@ export default async function CenterPage({ params }: PageProps<'/centers/[slug]'
             {center.trainers.map((trainer, index) => (
               <article
                 key={trainer.id}
-                className="card-lift reveal space-y-4 rounded-3xl border bg-card p-6"
+                className="card-lift reveal flex flex-col gap-4 rounded-3xl border bg-card p-6"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
                   <span
                     aria-hidden
                     className={`flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br font-display text-lg font-black text-white ${AVATAR_TONES[index % AVATAR_TONES.length]}`}
@@ -162,7 +162,7 @@ export default async function CenterPage({ params }: PageProps<'/centers/[slug]'
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">{trainer.bio}</p>
-                <p className="border-t pt-3 text-sm">
+                <p className="mt-auto border-t pt-3 text-sm">
                   Персональне заняття:{' '}
                   <span className="font-display font-bold">
                     {formatPrice(trainer.sessionPrice)} / год

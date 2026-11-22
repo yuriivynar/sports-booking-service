@@ -30,9 +30,9 @@ export function Pagination({ page, pageSize, total, query }: Props) {
             <ChevronLeft /> Назад
           </Link>
         ) : (
-          <span>
+          <>
             <ChevronLeft /> Назад
-          </span>
+          </>
         )}
       </Button>
       <span className="px-2 text-sm text-muted-foreground">
@@ -44,9 +44,9 @@ export function Pagination({ page, pageSize, total, query }: Props) {
             Далі <ChevronRight />
           </Link>
         ) : (
-          <span>
+          <>
             Далі <ChevronRight />
-          </span>
+          </>
         )}
       </Button>
     </nav>
