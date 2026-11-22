@@ -63,7 +63,7 @@ export default async function BookingPage({ params, searchParams }: PageProps<'/
             </div>
             <h1 className="text-3xl font-black sm:text-4xl">{booking.title}</h1>
             {booking.status === 'CONFIRMED' && (
-              <p className="flex items-center gap-2 font-medium text-success">
+              <p className="flex items-center gap-2 font-medium text-success-ink">
                 <CheckCircle2 className="size-5" aria-hidden /> Чекаємо на вас!
               </p>
             )}

@@ -16,7 +16,7 @@ export function LoyaltyPanel({ loyalty }: { loyalty: Loyalty }) {
         <ul className="space-y-1.5 text-sm">
           {loyalty.perks.map((perk) => (
             <li key={perk} className="flex items-start gap-2">
-              <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden /> {perk}
+              <Check className="mt-0.5 size-4 shrink-0 text-success-ink" aria-hidden /> {perk}
             </li>
           ))}
         </ul>
@@ -67,7 +67,7 @@ export function LoyaltyPanel({ loyalty }: { loyalty: Loyalty }) {
                 <span
                   className={cn(
                     'font-display font-bold tabular-nums',
-                    entry.amount > 0 ? 'text-success' : 'text-muted-foreground',
+                    entry.amount > 0 ? 'text-success-ink' : 'text-muted-foreground',
                   )}
                 >
                   {entry.amount > 0 ? '+' : '−'}
