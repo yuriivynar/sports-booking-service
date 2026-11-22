@@ -4,724 +4,1360 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["HealthController_check"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/api/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["UsersController_getProfile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["UsersController_updateProfile"];
-        trace?: never;
+    get: operations['HealthController_check'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/sports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_sports"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['UsersController_getProfile'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['UsersController_updateProfile'];
+    trace?: never;
+  };
+  '/api/me/avatar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/centers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_centers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['UsersController_uploadAvatar'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/sports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/centers/{slug}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_center"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_sports'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/centers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/sections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_sections"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_centers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/centers/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/sections/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_section"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_center'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/sections': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/halls": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_halls"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_sections'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/sections/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/trainers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_trainers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_section'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/halls': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/trainers/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_trainer"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_halls'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/trainers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/promotions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["CatalogController_promotions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations['CatalogController_trainers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/trainers/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get: operations['CatalogController_trainer'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/promotions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CatalogController_promotions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bookings/quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['BookingsController_quote'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bookings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['BookingsController_list'];
+    put?: never;
+    post: operations['BookingsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bookings/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['BookingsController_findOne'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bookings/{id}/pay': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['BookingsController_pay'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/bookings/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['BookingsController_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/halls/{id}/availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AvailabilityController_hall'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/trainers/{id}/availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AvailabilityController_trainer'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /** @enum {string} */
-        Role: "CLIENT" | "ADMIN";
-        /** @enum {string} */
-        LoyaltyTier: "STANDARD" | "PREMIUM" | "CORPORATE";
-        /** @enum {string} */
-        SkillLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
-        SportDto: {
-            /** @example yoga */
-            slug: string;
-            /** @example Йога */
-            name: string;
-            /**
-             * @description lucide-react icon name
-             * @example flower-2
-             */
-            icon: string;
-            /** @description Cover photo URL */
-            photoUrl: string | null;
-        };
-        UserProfileDto: {
-            /** Format: uuid */
-            id: string;
-            /** @example olena@example.com */
-            email: string;
-            fullName: string | null;
-            phone: string | null;
-            avatarUrl: string | null;
-            role: components["schemas"]["Role"];
-            loyaltyTier: components["schemas"]["LoyaltyTier"];
-            /** @description Bonus points; one point equals one hryvnia */
-            bonusBalance: number;
-            companyName: string | null;
-            preferredLevel: components["schemas"]["SkillLevel"] | null;
-            emailNotifications: boolean;
-            preferredSports: components["schemas"]["SportDto"][];
-            /** Format: date-time */
-            createdAt: string;
-        };
-        UpdateProfileDto: {
-            /** @example Олена Коваль */
-            fullName?: string;
-            /** @example +380671234567 */
-            phone?: string | null;
-            /** @example ТОВ «Приклад» */
-            companyName?: string | null;
-            preferredLevel?: components["schemas"]["SkillLevel"] | null;
-            emailNotifications?: boolean;
-            /**
-             * @description Slugs of favourite sports; replaces the current list
-             * @example [
-             *       "yoga",
-             *       "swimming"
-             *     ]
-             */
-            preferredSports?: string[];
-        };
-        CenterSummaryDto: {
-            /** @example sporthub-tsentr */
-            slug: string;
-            /** @example SportHub Центр */
-            name: string;
-            /** @example просп. Свободи, 22 */
-            address: string;
-            /** Format: uuid */
-            id: string;
-            /** @example Львів */
-            city: string;
-            /** @example 49.8429 */
-            latitude: number;
-            /** @example 24.0269 */
-            longitude: number;
-            phone: string;
-            photoUrl: string | null;
-            /** @example 7 */
-            openHour: number;
-            /** @example 22 */
-            closeHour: number;
-            /** @description Sports available in the halls of the center */
-            sports: components["schemas"]["SportDto"][];
-            hallCount: number;
-            sectionCount: number;
-        };
-        /** @enum {string} */
-        HallKind: "GYM" | "POOL" | "COURT" | "FIELD" | "STUDIO";
-        CenterRefDto: {
-            /** @example sporthub-tsentr */
-            slug: string;
-            /** @example SportHub Центр */
-            name: string;
-            /** @example просп. Свободи, 22 */
-            address: string;
-        };
-        HallDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            description: string;
-            kind: components["schemas"]["HallKind"];
-            capacity: number;
-            /**
-             * @description Price of one hour, in kopecks
-             * @example 50000
-             */
-            hourlyPrice: number;
-            photoUrl: string | null;
-            sports: components["schemas"]["SportDto"][];
-            center: components["schemas"]["CenterRefDto"];
-        };
-        TrainerDto: {
-            /** Format: uuid */
-            id: string;
-            fullName: string;
-            bio: string;
-            photoUrl: string | null;
-            experienceYears: number;
-            /** @description Price of a one-hour personal session, in kopecks */
-            sessionPrice: number;
-            sports: components["schemas"]["SportDto"][];
-            center: components["schemas"]["CenterRefDto"];
-        };
-        /** @enum {string} */
-        AgeGroup: "KIDS" | "TEENS" | "ADULTS" | "SENIORS";
-        TrainerRefDto: {
-            /** Format: uuid */
-            id: string;
-            /** @example Олена Коваль */
-            fullName: string;
-        };
-        HallRefDto: {
-            /** Format: uuid */
-            id: string;
-            /** @example Зала йоги */
-            name: string;
-        };
-        SessionDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: date-time */
-            startsAt: string;
-            /** Format: date-time */
-            endsAt: string;
-            capacity: number;
-            /** @description Free places left */
-            seatsLeft: number;
-            hall: components["schemas"]["HallRefDto"];
-        };
-        SectionSummaryDto: {
-            /** Format: uuid */
-            id: string;
-            /** @example Йога для початківців */
-            name: string;
-            description: string;
-            level: components["schemas"]["SkillLevel"];
-            ageGroup: components["schemas"]["AgeGroup"];
-            capacity: number;
-            /**
-             * @description Price of one visit, in kopecks
-             * @example 25000
-             */
-            sessionPrice: number;
-            sport: components["schemas"]["SportDto"];
-            center: components["schemas"]["CenterRefDto"];
-            trainer: components["schemas"]["TrainerRefDto"] | null;
-            /** @description Nearest upcoming session */
-            nextSession: components["schemas"]["SessionDto"] | null;
-        };
-        CenterDetailDto: {
-            /** @example sporthub-tsentr */
-            slug: string;
-            /** @example SportHub Центр */
-            name: string;
-            /** @example просп. Свободи, 22 */
-            address: string;
-            /** Format: uuid */
-            id: string;
-            /** @example Львів */
-            city: string;
-            /** @example 49.8429 */
-            latitude: number;
-            /** @example 24.0269 */
-            longitude: number;
-            phone: string;
-            photoUrl: string | null;
-            /** @example 7 */
-            openHour: number;
-            /** @example 22 */
-            closeHour: number;
-            /** @description Sports available in the halls of the center */
-            sports: components["schemas"]["SportDto"][];
-            hallCount: number;
-            sectionCount: number;
-            description: string;
-            halls: components["schemas"]["HallDto"][];
-            trainers: components["schemas"]["TrainerDto"][];
-            sections: components["schemas"]["SectionSummaryDto"][];
-        };
-        SectionPageDto: {
-            items: components["schemas"]["SectionSummaryDto"][];
-            total: number;
-            page: number;
-            pageSize: number;
-        };
-        SectionDetailDto: {
-            /** Format: uuid */
-            id: string;
-            /** @example Йога для початківців */
-            name: string;
-            description: string;
-            level: components["schemas"]["SkillLevel"];
-            ageGroup: components["schemas"]["AgeGroup"];
-            capacity: number;
-            /**
-             * @description Price of one visit, in kopecks
-             * @example 25000
-             */
-            sessionPrice: number;
-            sport: components["schemas"]["SportDto"];
-            center: components["schemas"]["CenterRefDto"];
-            trainer: components["schemas"]["TrainerRefDto"] | null;
-            /** @description Nearest upcoming session */
-            nextSession: components["schemas"]["SessionDto"] | null;
-            /** @description Upcoming sessions for the next 14 days */
-            sessions: components["schemas"]["SessionDto"][];
-        };
-        PromotionDto: {
-            /** Format: uuid */
-            id: string;
-            title: string;
-            description: string;
-            /** @example 20 */
-            discountPercent: number;
-            sport?: components["schemas"]["SportDto"] | null;
-            center?: components["schemas"]["CenterRefDto"] | null;
-            /** Format: date-time */
-            endsAt: string;
-        };
+  schemas: {
+    /** @enum {string} */
+    Role: 'CLIENT' | 'ADMIN';
+    /** @enum {string} */
+    LoyaltyTier: 'STANDARD' | 'PREMIUM' | 'CORPORATE';
+    /** @enum {string} */
+    SkillLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    SportDto: {
+      /** @example yoga */
+      slug: string;
+      /** @example Йога */
+      name: string;
+      /**
+       * @description lucide-react icon name
+       * @example flower-2
+       */
+      icon: string;
+      /** @description Cover photo URL */
+      photoUrl: string | null;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    UserProfileDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example olena@example.com */
+      email: string;
+      fullName: string | null;
+      phone: string | null;
+      avatarUrl: string | null;
+      role: components['schemas']['Role'];
+      loyaltyTier: components['schemas']['LoyaltyTier'];
+      /** @description Bonus points; one point equals one hryvnia */
+      bonusBalance: number;
+      companyName: string | null;
+      preferredLevel: components['schemas']['SkillLevel'] | null;
+      emailNotifications: boolean;
+      preferredSports: components['schemas']['SportDto'][];
+      /** Format: date-time */
+      createdAt: string;
+    };
+    UpdateProfileDto: {
+      /** @example Олена Коваль */
+      fullName?: string;
+      /** @example +380671234567 */
+      phone?: string | null;
+      /** @example ТОВ «Приклад» */
+      companyName?: string | null;
+      preferredLevel?: components['schemas']['SkillLevel'] | null;
+      emailNotifications?: boolean;
+      /**
+       * @description Slugs of favourite sports; replaces the current list
+       * @example [
+       *       "yoga",
+       *       "swimming"
+       *     ]
+       */
+      preferredSports?: string[];
+    };
+    CenterSummaryDto: {
+      /** @example sporthub-tsentr */
+      slug: string;
+      /** @example SportHub Центр */
+      name: string;
+      /** @example просп. Свободи, 22 */
+      address: string;
+      /** Format: uuid */
+      id: string;
+      /** @example Львів */
+      city: string;
+      /** @example 49.8429 */
+      latitude: number;
+      /** @example 24.0269 */
+      longitude: number;
+      phone: string;
+      photoUrl: string | null;
+      /** @example 7 */
+      openHour: number;
+      /** @example 22 */
+      closeHour: number;
+      /** @description Sports available in the halls of the center */
+      sports: components['schemas']['SportDto'][];
+      hallCount: number;
+      sectionCount: number;
+    };
+    /** @enum {string} */
+    HallKind: 'GYM' | 'POOL' | 'COURT' | 'FIELD' | 'STUDIO';
+    CenterRefDto: {
+      /** @example sporthub-tsentr */
+      slug: string;
+      /** @example SportHub Центр */
+      name: string;
+      /** @example просп. Свободи, 22 */
+      address: string;
+    };
+    HallDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      description: string;
+      kind: components['schemas']['HallKind'];
+      capacity: number;
+      /**
+       * @description Price of one hour, in kopecks
+       * @example 50000
+       */
+      hourlyPrice: number;
+      photoUrl: string | null;
+      sports: components['schemas']['SportDto'][];
+      center: components['schemas']['CenterRefDto'];
+    };
+    TrainerDto: {
+      /** Format: uuid */
+      id: string;
+      fullName: string;
+      bio: string;
+      photoUrl: string | null;
+      experienceYears: number;
+      /** @description Price of a one-hour personal session, in kopecks */
+      sessionPrice: number;
+      sports: components['schemas']['SportDto'][];
+      center: components['schemas']['CenterRefDto'];
+    };
+    /** @enum {string} */
+    AgeGroup: 'KIDS' | 'TEENS' | 'ADULTS' | 'SENIORS';
+    TrainerRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example Олена Коваль */
+      fullName: string;
+    };
+    HallRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example Зала йоги */
+      name: string;
+    };
+    SessionDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      capacity: number;
+      /** @description Free places left */
+      seatsLeft: number;
+      hall: components['schemas']['HallRefDto'];
+    };
+    SectionSummaryDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example Йога для початківців */
+      name: string;
+      description: string;
+      level: components['schemas']['SkillLevel'];
+      ageGroup: components['schemas']['AgeGroup'];
+      capacity: number;
+      /**
+       * @description Price of one visit, in kopecks
+       * @example 25000
+       */
+      sessionPrice: number;
+      sport: components['schemas']['SportDto'];
+      center: components['schemas']['CenterRefDto'];
+      trainer: components['schemas']['TrainerRefDto'] | null;
+      /** @description Nearest upcoming session */
+      nextSession: components['schemas']['SessionDto'] | null;
+    };
+    CenterDetailDto: {
+      /** @example sporthub-tsentr */
+      slug: string;
+      /** @example SportHub Центр */
+      name: string;
+      /** @example просп. Свободи, 22 */
+      address: string;
+      /** Format: uuid */
+      id: string;
+      /** @example Львів */
+      city: string;
+      /** @example 49.8429 */
+      latitude: number;
+      /** @example 24.0269 */
+      longitude: number;
+      phone: string;
+      photoUrl: string | null;
+      /** @example 7 */
+      openHour: number;
+      /** @example 22 */
+      closeHour: number;
+      /** @description Sports available in the halls of the center */
+      sports: components['schemas']['SportDto'][];
+      hallCount: number;
+      sectionCount: number;
+      description: string;
+      halls: components['schemas']['HallDto'][];
+      trainers: components['schemas']['TrainerDto'][];
+      sections: components['schemas']['SectionSummaryDto'][];
+    };
+    SectionPageDto: {
+      items: components['schemas']['SectionSummaryDto'][];
+      total: number;
+      page: number;
+      pageSize: number;
+    };
+    SectionDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example Йога для початківців */
+      name: string;
+      description: string;
+      level: components['schemas']['SkillLevel'];
+      ageGroup: components['schemas']['AgeGroup'];
+      capacity: number;
+      /**
+       * @description Price of one visit, in kopecks
+       * @example 25000
+       */
+      sessionPrice: number;
+      sport: components['schemas']['SportDto'];
+      center: components['schemas']['CenterRefDto'];
+      trainer: components['schemas']['TrainerRefDto'] | null;
+      /** @description Nearest upcoming session */
+      nextSession: components['schemas']['SessionDto'] | null;
+      /** @description Upcoming sessions for the next 14 days */
+      sessions: components['schemas']['SessionDto'][];
+    };
+    PromotionDto: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      /** @example 20 */
+      discountPercent: number;
+      sport?: components['schemas']['SportDto'] | null;
+      center?: components['schemas']['CenterRefDto'] | null;
+      /** Format: date-time */
+      endsAt: string;
+    };
+    /** @enum {string} */
+    BookingType: 'HALL_RENTAL' | 'GROUP_SESSION' | 'PERSONAL_TRAINING';
+    CreateBookingDto: {
+      type: components['schemas']['BookingType'];
+      /**
+       * Format: uuid
+       * @description Required for HALL_RENTAL
+       */
+      hallId?: string;
+      /**
+       * Format: uuid
+       * @description Required for PERSONAL_TRAINING
+       */
+      trainerId?: string;
+      /**
+       * Format: uuid
+       * @description Required for GROUP_SESSION
+       */
+      groupSessionId?: string;
+      /**
+       * Format: date-time
+       * @description Start of a hall rental or personal training, on the hour (Kyiv time)
+       */
+      startsAt?: string;
+      /** @default 1 */
+      hours: number;
+      /**
+       * Format: uuid
+       * @description Membership to pay for a group session
+       */
+      membershipId?: string;
+      /** @description Bonus points to spend; 1 point = 1 UAH */
+      pointsToRedeem?: number;
+    };
+    /** @enum {string} */
+    PriceLineKind: 'BASE' | 'MEMBERSHIP' | 'PROMOTION' | 'LOYALTY' | 'BONUS_POINTS';
+    PriceLineDto: {
+      kind: components['schemas']['PriceLineKind'];
+      /** @example Акція «Зимовий старт» */
+      label: string;
+      /** @description Kopecks: positive for the base price, negative for reductions */
+      amount: number;
+    };
+    BookingQuoteDto: {
+      basePrice: number;
+      /** @description Money discounts */
+      discount: number;
+      /** @description Bonus points spent; 1 point = 1 UAH */
+      pointsRedeemed: number;
+      /** @description Amount to pay */
+      finalPrice: number;
+      /** @description Bonus points for paying finalPrice */
+      pointsEarned: number;
+      priceBreakdown: components['schemas']['PriceLineDto'][];
+      type: components['schemas']['BookingType'];
+      /** @example Йога для початківців */
+      title: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      loyaltyTier: components['schemas']['LoyaltyTier'];
+    };
+    /** @enum {string} */
+    BookingStatus: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
+    /** @enum {string} */
+    BookingAction: 'pay' | 'cancel';
+    BookingDto: {
+      basePrice: number;
+      /** @description Money discounts */
+      discount: number;
+      /** @description Bonus points spent; 1 point = 1 UAH */
+      pointsRedeemed: number;
+      /** @description Amount to pay */
+      finalPrice: number;
+      /** @description Bonus points for paying finalPrice */
+      pointsEarned: number;
+      priceBreakdown: components['schemas']['PriceLineDto'][];
+      /** Format: uuid */
+      id: string;
+      type: components['schemas']['BookingType'];
+      status: components['schemas']['BookingStatus'];
+      /** @example Йога для початківців */
+      title: string;
+      /** @example Зала йоги */
+      hallName: string | null;
+      /** @example Олена Коваль */
+      trainerName: string | null;
+      sport: components['schemas']['SportDto'] | null;
+      center: components['schemas']['CenterRefDto'];
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      /**
+       * Format: date-time
+       * @description Pending bookings are released after this moment
+       */
+      payBefore: string | null;
+      cancelReason: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      allowedActions: components['schemas']['BookingAction'][];
+    };
+    PayBookingDto: {
+      /** @example 4242 4242 4242 4242 */
+      cardNumber: string;
+      /** @example 12 */
+      expMonth: number;
+      /**
+       * @description Four-digit year
+       * @example 2028
+       */
+      expYear: number;
+      /** @example 123 */
+      cvc: string;
+      /** @example TARAS SHEVCHENKO */
+      holder: string;
+    };
+    CancelBookingDto: {
+      /** @example Змінилися плани */
+      reason?: string;
+    };
+    SlotDto: {
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      available: boolean;
+    };
+    AvailabilityDto: {
+      /** @example 2026-11-24 */
+      date: string;
+      /** @example 7 */
+      openHour: number;
+      /** @example 22 */
+      closeHour: number;
+      /** @description Price of one hour, in kopecks */
+      pricePerHour: number;
+      slots: components['schemas']['SlotDto'][];
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    HealthController_check: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  HealthController_check: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    UsersController_getProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserProfileDto"];
-                };
-            };
-            /** @description Немає дійсного токена Supabase */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+        content?: never;
+      };
     };
-    UsersController_updateProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProfileDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserProfileDto"];
-                };
-            };
-            /** @description Немає дійсного токена Supabase */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  UsersController_getProfile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    CatalogController_sports: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SportDto"][];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['UserProfileDto'];
         };
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    CatalogController_centers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CenterSummaryDto"][];
-                };
-            };
-        };
+  };
+  UsersController_updateProfile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    CatalogController_center: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CenterDetailDto"];
-                };
-            };
-            /** @description Центр не знайдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateProfileDto'];
+      };
     };
-    CatalogController_sections: {
-        parameters: {
-            query?: {
-                /** @description Sport slug */
-                sport?: string;
-                level?: components["schemas"]["SkillLevel"];
-                ageGroup?: components["schemas"]["AgeGroup"];
-                /** @description Center slug */
-                center?: string;
-                /** @description Text to find in the name or description */
-                q?: string;
-                sort?: "name" | "price-asc" | "price-desc";
-                page?: number;
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SectionPageDto"];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['UserProfileDto'];
         };
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    CatalogController_section: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SectionDetailDto"];
-                };
-            };
-            /** @description Секцію не знайдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  UsersController_uploadAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    CatalogController_halls: {
-        parameters: {
-            query?: {
-                /** @description Sport slug */
-                sport?: string;
-                /** @description Center slug */
-                center?: string;
-                kind?: components["schemas"]["HallKind"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /**
+           * Format: binary
+           * @description JPEG, PNG or WebP
+           */
+          file: string;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HallDto"][];
-                };
-            };
-        };
+      };
     };
-    CatalogController_trainers: {
-        parameters: {
-            query?: {
-                /** @description Sport slug */
-                sport?: string;
-                /** @description Center slug */
-                center?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TrainerDto"][];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['UserProfileDto'];
         };
+      };
+      /** @description Not a JPEG, PNG or WebP image */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Larger than 2 MB */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
-    CatalogController_trainer: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TrainerDto"];
-                };
-            };
-            /** @description Тренера не знайдено */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  CatalogController_sports: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    CatalogController_promotions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Promotions active right now */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PromotionDto"][];
-                };
-            };
+        content: {
+          'application/json': components['schemas']['SportDto'][];
         };
+      };
     };
+  };
+  CatalogController_centers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CenterSummaryDto'][];
+        };
+      };
+    };
+  };
+  CatalogController_center: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CenterDetailDto'];
+        };
+      };
+      /** @description Центр не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CatalogController_sections: {
+    parameters: {
+      query?: {
+        /** @description Sport slug */
+        sport?: string;
+        level?: components['schemas']['SkillLevel'];
+        ageGroup?: components['schemas']['AgeGroup'];
+        /** @description Center slug */
+        center?: string;
+        /** @description Text to find in the name or description */
+        q?: string;
+        sort?: 'name' | 'price-asc' | 'price-desc';
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SectionPageDto'];
+        };
+      };
+    };
+  };
+  CatalogController_section: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SectionDetailDto'];
+        };
+      };
+      /** @description Секцію не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CatalogController_halls: {
+    parameters: {
+      query?: {
+        /** @description Sport slug */
+        sport?: string;
+        /** @description Center slug */
+        center?: string;
+        kind?: components['schemas']['HallKind'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HallDto'][];
+        };
+      };
+    };
+  };
+  CatalogController_trainers: {
+    parameters: {
+      query?: {
+        /** @description Sport slug */
+        sport?: string;
+        /** @description Center slug */
+        center?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TrainerDto'][];
+        };
+      };
+    };
+  };
+  CatalogController_trainer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TrainerDto'];
+        };
+      };
+      /** @description Тренера не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CatalogController_promotions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Promotions active right now */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PromotionDto'][];
+        };
+      };
+    };
+  };
+  BookingsController_quote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBookingDto'];
+      };
+    };
+    responses: {
+      /** @description Price breakdown; nothing is saved */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BookingQuoteDto'];
+        };
+      };
+      /** @description The request breaks a booking rule */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The place is taken */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BookingsController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The signed-in user’s bookings, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BookingDto'][];
+        };
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BookingsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBookingDto'];
+      };
+    };
+    responses: {
+      /** @description PENDING until paid, or CONFIRMED when there is nothing to pay */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BookingDto'];
+        };
+      };
+      /** @description The request breaks a booking rule */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The place is taken or already booked by the user */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BookingsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BookingDto'];
+        };
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Бронювання не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BookingsController_pay: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayBookingDto'];
+      };
+    };
+    responses: {
+      /** @description Paid and confirmed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BookingDto'];
+        };
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The card was declined; the booking stays pending */
+      402: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Already paid, cancelled or the hold expired */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BookingsController_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CancelBookingDto'];
+      };
+    };
+    responses: {
+      /** @description Cancelled; money and points returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BookingDto'];
+        };
+      };
+      /** @description Немає дійсного токена Supabase */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too late to cancel or already cancelled */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AvailabilityController_hall: {
+    parameters: {
+      query: {
+        /** @description Date in Kyiv, YYYY-MM-DD */
+        date: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Hourly slots of the hall for one day */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AvailabilityDto'];
+        };
+      };
+      /** @description Date outside the booking horizon */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Зал не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AvailabilityController_trainer: {
+    parameters: {
+      query: {
+        /** @description Date in Kyiv, YYYY-MM-DD */
+        date: string;
+      };
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Hourly slots of the trainer for one day */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AvailabilityDto'];
+        };
+      };
+      /** @description Date outside the booking horizon */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Тренера не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
 }
