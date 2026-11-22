@@ -5,6 +5,8 @@ import { BookingsModule } from './bookings/bookings.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { EventsModule } from './events/events.module.js';
 import { HealthController } from './health/health.controller.js';
+import { LoyaltyModule } from './loyalty/loyalty.module.js';
+import { MembershipsModule } from './memberships/memberships.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -20,6 +22,8 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     CatalogModule,
     BookingsModule,
+    MembershipsModule,
+    LoyaltyModule,
   ],
   controllers: [HealthController],
 })

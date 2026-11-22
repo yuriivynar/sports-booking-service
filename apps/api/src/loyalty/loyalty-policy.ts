@@ -22,6 +22,8 @@ export interface LoyaltyPolicy {
   readonly discountPercent: number;
   /** Bonus points earned per 100 hryvnias paid (one point = one hryvnia). */
   readonly pointsPer100Uah: number;
+  /** What the card gives, for the profile page. */
+  readonly perks: readonly string[];
   /** True when the tier makes this booking free. */
   coversForFree(subject: LoyaltySubject): boolean;
   /** Points earned for an amount actually paid, in kopecks. */
@@ -33,6 +35,7 @@ abstract class BaseLoyaltyPolicy implements LoyaltyPolicy {
   abstract readonly label: string;
   abstract readonly discountPercent: number;
   abstract readonly pointsPer100Uah: number;
+  abstract readonly perks: readonly string[];
 
   coversForFree(_subject: LoyaltySubject): boolean {
     return false;
@@ -49,6 +52,7 @@ export class StandardPolicy extends BaseLoyaltyPolicy {
   readonly label = 'Стандарт';
   readonly discountPercent = 0;
   readonly pointsPer100Uah = 3;
+  readonly perks = ['3 бали за кожні 100 грн', 'Бали покривають до 50% ціни'];
 }
 
 export class PremiumPolicy extends BaseLoyaltyPolicy {
@@ -56,6 +60,11 @@ export class PremiumPolicy extends BaseLoyaltyPolicy {
   readonly label = 'Преміум';
   readonly discountPercent = 10;
   readonly pointsPer100Uah = 7;
+  readonly perks = [
+    'Знижка 10% на всі бронювання',
+    '7 балів за кожні 100 грн',
+    'Групові заняття в басейні безкоштовно',
+  ];
 
   /** Premium cardholders swim in group sessions for free. */
   override coversForFree(subject: LoyaltySubject): boolean {
@@ -68,6 +77,7 @@ export class CorporatePolicy extends BaseLoyaltyPolicy {
   readonly label = 'Корпоративна';
   readonly discountPercent = 15;
   readonly pointsPer100Uah = 2;
+  readonly perks = ['Знижка 15% на всі бронювання', '2 бали за кожні 100 грн'];
 }
 
 const LOYALTY_POLICIES: Record<LoyaltyTier, LoyaltyPolicy> = {
