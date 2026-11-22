@@ -11,7 +11,7 @@ import {
   postgresErrorCode,
 } from '../common/database-errors.js';
 import { EventBus } from '../events/event-bus.js';
-import type { Prisma } from '../generated/prisma/client.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { FileStorage } from '../storage/file-storage.js';
 import { detectImageType } from '../users/avatar-image.js';
@@ -111,12 +111,12 @@ export class AdminCatalogService {
   }
 
   async createHall({ sportSlugs, ...dto }: CreateHallDto): Promise<AdminHallDto> {
-    await this.requireCenter(dto.centerId);
+    const center = await this.requireCenter(dto.centerId);
     await this.checkPhoto(dto.photoUrl);
     const sports = await this.sportIds(sportSlugs);
     return this.write(() =>
       this.prisma.hall.create({
-        data: { ...dto, sports: { connect: sports } },
+        data: { ...dto, isActive: openUnder(center, dto.isActive), sports: { connect: sports } },
         include: SPORTS_INCLUDE,
         omit: { createdAt: true, updatedAt: true },
       }),
@@ -126,6 +126,7 @@ export class AdminCatalogService {
   async updateHall(id: string, { sportSlugs, ...dto }: UpdateHallDto): Promise<AdminHallDto> {
     const current = await this.prisma.hall.findUnique({ where: { id } });
     if (!current) throw new NotFoundException('Зал не знайдено');
+    await this.checkReopen(current.centerId, dto.isActive);
     await this.checkPhoto(dto.photoUrl, current.photoUrl);
     const sports = sportSlugs && (await this.sportIds(sportSlugs));
     return this.write(() =>
@@ -160,12 +161,12 @@ export class AdminCatalogService {
   }
 
   async createTrainer({ sportSlugs, ...dto }: CreateTrainerDto): Promise<AdminTrainerDto> {
-    await this.requireCenter(dto.centerId);
+    const center = await this.requireCenter(dto.centerId);
     await this.checkPhoto(dto.photoUrl);
     const sports = await this.sportIds(sportSlugs);
     return this.write(() =>
       this.prisma.trainer.create({
-        data: { ...dto, sports: { connect: sports } },
+        data: { ...dto, isActive: openUnder(center, dto.isActive), sports: { connect: sports } },
         include: SPORTS_INCLUDE,
         omit: { createdAt: true, updatedAt: true },
       }),
@@ -178,6 +179,7 @@ export class AdminCatalogService {
   ): Promise<AdminTrainerDto> {
     const current = await this.prisma.trainer.findUnique({ where: { id } });
     if (!current) throw new NotFoundException('Тренера не знайдено');
+    await this.checkReopen(current.centerId, dto.isActive);
     await this.checkPhoto(dto.photoUrl, current.photoUrl);
     const sports = sportSlugs && (await this.sportIds(sportSlugs));
     return this.write(() =>
@@ -212,12 +214,12 @@ export class AdminCatalogService {
   }
 
   async createSection({ sportSlug, ...dto }: CreateSectionDto): Promise<AdminSectionDto> {
-    await this.requireCenter(dto.centerId);
+    const center = await this.requireCenter(dto.centerId);
     const sportId = await this.sportId(sportSlug);
     await this.checkTrainer(dto.trainerId, dto.centerId);
     const row = await this.write(() =>
       this.prisma.section.create({
-        data: { ...dto, sportId },
+        data: { ...dto, sportId, isActive: openUnder(center, dto.isActive) },
         include: sectionInclude(new Date()),
       }),
     );
@@ -228,8 +230,9 @@ export class AdminCatalogService {
   async updateSection(id: string, { sportSlug, ...dto }: UpdateSectionDto) {
     const current = await this.prisma.section.findUnique({ where: { id } });
     if (!current) throw new NotFoundException('Секцію не знайдено');
+    await this.checkReopen(current.centerId, dto.isActive);
     const sportId = sportSlug ? await this.sportId(sportSlug) : undefined;
-    await this.checkTrainer(dto.trainerId, current.centerId);
+    await this.checkTrainer(dto.trainerId, current.centerId, current.trainerId);
     const row = await this.write(() =>
       this.prisma.section.update({
         where: { id },
@@ -282,10 +285,20 @@ export class AdminCatalogService {
 
   // ---------- Helpers ----------
 
-  private async requireCenter(id: string): Promise<void> {
-    if (!(await this.prisma.sportCenter.count({ where: { id } }))) {
-      throw new NotFoundException('Центр не знайдено');
-    }
+  private async requireCenter(id: string): Promise<{ isActive: boolean }> {
+    const center = await this.prisma.sportCenter.findUnique({
+      where: { id },
+      select: { isActive: true },
+    });
+    if (!center) throw new NotFoundException('Центр не знайдено');
+    return center;
+  }
+
+  /** A closed center sells nothing, so nothing in it may be switched back on. */
+  private async checkReopen(centerId: string, isActive: boolean | undefined): Promise<void> {
+    if (isActive !== true) return;
+    const center = await this.requireCenter(centerId);
+    if (!center.isActive) throw new BadRequestException('Спершу активуйте сам центр');
   }
 
   /**
@@ -299,11 +312,16 @@ export class AdminCatalogService {
     }
   }
 
-  private async checkTrainer(trainerId: string | null | undefined, centerId: string) {
-    if (!trainerId) return;
+  /** A new trainer must be active and from the same center; the current one may stay. */
+  private async checkTrainer(
+    trainerId: string | null | undefined,
+    centerId: string,
+    current: string | null = null,
+  ) {
+    if (!trainerId || trainerId === current) return;
     const trainer = await this.prisma.trainer.findUnique({ where: { id: trainerId } });
-    if (!trainer || trainer.centerId !== centerId) {
-      throw new BadRequestException('Тренер має працювати в цьому центрі');
+    if (!trainer || trainer.centerId !== centerId || !trainer.isActive) {
+      throw new BadRequestException('Оберіть активного тренера цього центру');
     }
   }
 
@@ -327,6 +345,10 @@ export class AdminCatalogService {
     try {
       return await work();
     } catch (error) {
+      // A required field sent as null passes @IsOptional and stops at Prisma.
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestException('Обовʼязкові поля не можуть бути порожніми');
+      }
       const code = postgresErrorCode(error);
       if (code === PG_UNIQUE_VIOLATION) {
         throw new ConflictException('Запис із такою назвою або адресою вже існує');
@@ -359,12 +381,23 @@ async function deleteOrDeactivate(
   }
 }
 
-/** A closed center sells nothing: its halls, trainers and sections go too. */
+/**
+ * A closed center sells nothing: its halls, trainers and sections go, and
+ * so do the plans and promotions limited to it.
+ */
 async function deactivateCenterContents(tx: Prisma.TransactionClient, centerId: string) {
   const where = { centerId, isActive: true };
-  await tx.hall.updateMany({ where, data: { isActive: false } });
-  await tx.trainer.updateMany({ where, data: { isActive: false } });
-  await tx.section.updateMany({ where, data: { isActive: false } });
+  const data = { isActive: false };
+  await tx.hall.updateMany({ where, data });
+  await tx.trainer.updateMany({ where, data });
+  await tx.section.updateMany({ where, data });
+  await tx.membershipPlan.updateMany({ where, data });
+  await tx.promotion.updateMany({ where, data });
+}
+
+/** New items in a closed center start closed too. */
+function openUnder(center: { isActive: boolean }, requested: boolean | undefined): boolean {
+  return (requested ?? true) && center.isActive;
 }
 
 const CENTER_QUERY = {
