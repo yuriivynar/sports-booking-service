@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CatalogQueryBuilder, sectionInclude } from './catalog-query.builder.js';
 import type {
   CenterDetailDto,
+  OffersDto,
   CenterSummaryDto,
   HallDto,
   PromotionDto,
@@ -179,10 +180,45 @@ export class CatalogService {
     return trainer;
   }
 
-  activePromotions(): Promise<PromotionDto[]> {
+  /**
+   * Personal offers: active promotions for the user's favourite sports (or
+   * network-wide ones) and sections that match their sports and level and
+   * have a session coming up.
+   */
+  async offersFor(userId: string): Promise<OffersDto> {
+    const now = new Date();
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { preferredLevel: true, preferredSports: { select: { id: true } } },
+    });
+    const sportIds = user.preferredSports.map((sport) => sport.id);
+    const [promotions, sections] = await Promise.all([
+      this.activePromotions(
+        sportIds.length > 0 ? { OR: [{ sportId: null }, { sportId: { in: sportIds } }] } : {},
+      ),
+      this.prisma.section.findMany({
+        where: {
+          isActive: true,
+          ...(sportIds.length > 0 && { sportId: { in: sportIds } }),
+          ...(user.preferredLevel && { level: user.preferredLevel }),
+          sessions: { some: { startsAt: { gt: now }, isCancelled: false } },
+        },
+        orderBy: { name: 'asc' },
+        take: 6,
+        include: sectionInclude(now),
+      }),
+    ]);
+    return {
+      personalized: sportIds.length > 0 || user.preferredLevel !== null,
+      promotions,
+      sections: sections.map(toSectionSummary),
+    };
+  }
+
+  activePromotions(filter: Prisma.PromotionWhereInput = {}): Promise<PromotionDto[]> {
     const now = new Date();
     return this.prisma.promotion.findMany({
-      where: { isActive: true, startsAt: { lte: now }, endsAt: { gt: now } },
+      where: { isActive: true, startsAt: { lte: now }, endsAt: { gt: now }, ...filter },
       orderBy: { endsAt: 'asc' },
       select: {
         id: true,

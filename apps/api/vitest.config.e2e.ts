@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { defineConfig } from 'vitest/config';
 import { TEST_ADMIN_EMAIL, TEST_SUPABASE_URL } from './test/test-auth.js';
 import { TEST_DATABASE_URL } from './test/test-database.js';
@@ -16,6 +17,8 @@ export default defineConfig({
       ADMIN_EMAILS: TEST_ADMIN_EMAIL,
       // Tests never send real email; notification tests replace the sender.
       EMAIL_DRIVER: 'log',
+      // A fresh secret per run, so no secret is ever written into the repository.
+      CRON_SECRET: randomBytes(24).toString('hex'),
     },
     globalSetup: ['./test/global-setup.ts'],
     // Test files share one database, so run them one after another.

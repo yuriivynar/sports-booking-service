@@ -230,3 +230,14 @@ export class PromotionDto {
   @ApiProperty()
   endsAt: Date;
 }
+
+export class OffersDto {
+  @ApiProperty({ description: 'False when the user has not set favourite sports or a level yet' })
+  personalized: boolean;
+
+  @ApiProperty({ type: [PromotionDto] })
+  promotions: PromotionDto[];
+
+  @ApiProperty({ type: [SectionSummaryDto], description: 'Up to 6 matching sections' })
+  sections: SectionSummaryDto[];
+}

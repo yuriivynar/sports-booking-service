@@ -5,6 +5,7 @@ import { BookingsModule } from './bookings/bookings.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
 import { EventsModule } from './events/events.module.js';
 import { HealthController } from './health/health.controller.js';
+import { JobsModule } from './jobs/jobs.module.js';
 import { LoyaltyModule } from './loyalty/loyalty.module.js';
 import { MembershipsModule } from './memberships/memberships.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module.js';
     MembershipsModule,
     LoyaltyModule,
     NotificationsModule,
+    JobsModule,
   ],
   controllers: [HealthController],
 })
