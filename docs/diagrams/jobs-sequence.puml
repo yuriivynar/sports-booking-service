@@ -1,0 +1,96 @@
+@startuml jobs-sequence
+' Діаграма послідовності: регламентне завдання кожні 15 хвилин.
+' Згенерувати PNG: docker run --rm -e PLANTUML_LIMIT_SIZE=16384 -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/jobs-sequence.puml
+
+skinparam dpi 150
+skinparam defaultFontName "DejaVu Sans"
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam sequenceMessageAlign left
+skinparam BoxPadding 8
+skinparam sequence {
+  ArrowColor #4A5568
+  LifeLineBorderColor #A0AEC0
+  ParticipantBorderColor #3B6EA8
+  ParticipantBackgroundColor #EEF4FF
+  GroupBorderColor #A0AEC0
+}
+
+title SportHub — регламентне завдання: Supabase Cron → API → EventBus → сповіщення
+
+box "Supabase (eu-west-1)" #F7FAFC
+  participant "pg_cron\n*/15 * * * *" as cron
+  participant "pg_net\n+ Vault (cron_secret)" as net
+end box
+box "Vercel, функція API (dub1)" #FFFAF5
+  participant "JobsController\n+ CronSecretGuard" as ctrl
+  participant "JobsService" as jobs
+  participant "BookingFacade\n<<Facade>>" as facade #FFE8D6
+  participant "MembershipsService" as memberships
+  participant "EventBus\n<<Observer>>" as bus #ECEFF1
+  participant "LoyaltyService\n<<Observer>>" as loyalty #ECEFF1
+  participant "NotificationsService\n<<Observer>>" as notify #ECEFF1
+  participant "EmailSender\n<<Adapter>>" as email #FFF8E1
+end box
+database "PostgreSQL" as db
+
+cron -> net : select net.http_post(...)
+net -> ctrl : POST /api/jobs/reminders\nAuthorization: Bearer <CRON_SECRET>
+activate ctrl
+ctrl -> ctrl : sha256 обох значень,\ntimingSafeEqual
+alt секрет не збігається
+  ctrl --> net : 401 Unauthorized
+else секрет правильний
+  ctrl -> jobs : runMaintenance(now)
+  activate jobs
+
+  group 1. Неоплачені утримання (> 15 хв)
+    jobs -> facade : releaseExpiredHolds(drain)
+    facade -> db : PENDING, створені > 15 хв тому\n(пакети по 20, бюджет 10 с)
+    facade -> db : FOR UPDATE → CANCELLED,\nзвільнити місце, повернути бали
+    facade -> bus : publish booking.cancelled (SYSTEM)
+    bus -> notify : BookingCancelledTemplate
+  end
+
+  group 2. Завершені заняття → бали
+    jobs -> facade : completeFinishedBookings()
+    facade -> db : CONFIRMED → COMPLETED (State)\n+ bonus_transactions BOOKING_REWARD
+    facade -> bus : publish booking.completed
+    bus -> loyalty : recalculateTier (10 візитів → Premium)
+    bus -> notify : BonusEarnedTemplate
+  end
+
+  group 3. Абонементи, що закінчились
+    jobs -> memberships : expireEnded()
+    memberships -> db : ACTIVE → EXPIRED
+    memberships -> bus : publish membership.expired
+    bus -> loyalty : recalculateTier (Premium → Standard)
+  end
+
+  group 4. Нагадування за 2 і 24 години
+    jobs -> db : CONFIRMED у вікні [h−1; h],\nreminder_*_sent_at IS NULL
+    loop кожне бронювання
+      jobs -> db : умовний UPDATE ... SET sent_at = now\nWHERE sent_at IS NULL
+      note right of jobs : лише один паралельний запуск\nотримує count = 1
+      jobs -> bus : publish booking.reminder
+      bus -> notify : ReminderTemplate.render()\n<<Template Method>>
+      activate notify
+      notify -> db : INSERT notifications
+      notify -> email : send(лист), якщо дозволено
+      email --> notify : ок / помилка лише в журналі
+      deactivate notify
+    end
+  end
+
+  jobs --> ctrl : JobRunDto
+  deactivate jobs
+  ctrl --> net : 200 { releasedHolds, completedBookings,\nexpiredMemberships, reminders24h, reminders2h }
+end
+deactivate ctrl
+
+note over bus
+  Обробники виконуються до повернення publish():
+  serverless-функція може зупинитись одразу після
+  відповіді, тож у фоні нічого не лишається.
+end note
+@enduml
