@@ -58,6 +58,7 @@ package "Каталог" {
     * phone : text
     * open_hour : int
     * close_hour : int
+    * is_active : bool
   }
 
   entity halls {
