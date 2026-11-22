@@ -57,3 +57,15 @@ export type NotificationItem = Schemas['NotificationDto'];
 export type Offers = Schemas['OffersDto'];
 export type MembershipKind = Schemas['MembershipKind'];
 export type MembershipStatus = Schemas['MembershipStatus'];
+export type LoyaltyTier = Schemas['LoyaltyTier'];
+
+export type AdminCenter = Schemas['AdminCenterDto'];
+export type AdminHall = Schemas['AdminHallDto'];
+export type AdminTrainer = Schemas['AdminTrainerDto'];
+export type AdminSection = Schemas['AdminSectionDto'];
+export type AdminSession = Schemas['AdminSessionDto'];
+export type AdminPromotion = Schemas['AdminPromotionDto'];
+export type AdminPlan = Schemas['AdminPlanDto'];
+export type AdminStats = Schemas['AdminStatsDto'];
+export type JobRun = Schemas['JobRunDto'];
+export type Removal = Schemas['RemovalDto'];

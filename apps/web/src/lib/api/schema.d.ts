@@ -324,6 +324,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/me/loyalty': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['LoyaltyController_summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/membership-plans': {
     parameters: {
       query?: never;
@@ -366,22 +382,6 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['MembershipsController_pay'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/me/loyalty': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations['LoyaltyController_summary'];
-    put?: never;
-    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -462,6 +462,262 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['JobsController_runNow'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/centers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminCatalogController_centers'];
+    put?: never;
+    post: operations['AdminCatalogController_createCenter'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/centers/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminCatalogController_center'];
+    put?: never;
+    post?: never;
+    delete: operations['AdminCatalogController_removeCenter'];
+    options?: never;
+    head?: never;
+    patch: operations['AdminCatalogController_updateCenter'];
+    trace?: never;
+  };
+  '/api/admin/halls': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminCatalogController_halls'];
+    put?: never;
+    post: operations['AdminCatalogController_createHall'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/halls/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['AdminCatalogController_removeHall'];
+    options?: never;
+    head?: never;
+    patch: operations['AdminCatalogController_updateHall'];
+    trace?: never;
+  };
+  '/api/admin/trainers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminCatalogController_trainers'];
+    put?: never;
+    post: operations['AdminCatalogController_createTrainer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/trainers/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['AdminCatalogController_removeTrainer'];
+    options?: never;
+    head?: never;
+    patch: operations['AdminCatalogController_updateTrainer'];
+    trace?: never;
+  };
+  '/api/admin/sections': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminCatalogController_sections'];
+    put?: never;
+    post: operations['AdminCatalogController_createSection'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/sections/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['AdminCatalogController_removeSection'];
+    options?: never;
+    head?: never;
+    patch: operations['AdminCatalogController_updateSection'];
+    trace?: never;
+  };
+  '/api/admin/photos': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AdminCatalogController_uploadPhoto'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminScheduleController_list'];
+    put?: never;
+    post: operations['AdminScheduleController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/sessions/{id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['AdminScheduleController_cancel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/promotions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminOffersController_promotions'];
+    put?: never;
+    post: operations['AdminOffersController_createPromotion'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/promotions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['AdminOffersController_removePromotion'];
+    options?: never;
+    head?: never;
+    patch: operations['AdminOffersController_updatePromotion'];
+    trace?: never;
+  };
+  '/api/admin/plans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminOffersController_plans'];
+    put?: never;
+    post: operations['AdminOffersController_createPlan'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/plans/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['AdminOffersController_removePlan'];
+    options?: never;
+    head?: never;
+    patch: operations['AdminOffersController_updatePlan'];
+    trace?: never;
+  };
+  '/api/admin/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['AdminStatsController_get'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -857,6 +1113,33 @@ export interface components {
       slots: components['schemas']['SlotDto'][];
     };
     /** @enum {string} */
+    BonusReason: 'BOOKING_REWARD' | 'REDEMPTION' | 'REFUND' | 'ADJUSTMENT';
+    BonusEntryDto: {
+      /** Format: uuid */
+      id: string;
+      /** @description Positive for accruals, negative for spending */
+      amount: number;
+      reason: components['schemas']['BonusReason'];
+      note: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    LoyaltyDto: {
+      tier: components['schemas']['LoyaltyTier'];
+      /** @example Преміум */
+      label: string;
+      discountPercent: number;
+      pointsPer100Uah: number;
+      perks: string[];
+      bonusBalance: number;
+      /** @description Activities the user has attended */
+      completedVisits: number;
+      /** @description Visits that earn the Premium card */
+      premiumVisits: number;
+      /** @description Latest bonus point movements */
+      history: components['schemas']['BonusEntryDto'][];
+    };
+    /** @enum {string} */
     MembershipKind: 'SINGLE' | 'MONTHLY' | 'CORPORATE';
     MembershipPlanDto: {
       /** Format: uuid */
@@ -899,33 +1182,6 @@ export interface components {
       planId: string;
       /** @description Required for corporate plans */
       companyName?: string;
-    };
-    /** @enum {string} */
-    BonusReason: 'BOOKING_REWARD' | 'REDEMPTION' | 'REFUND' | 'ADJUSTMENT';
-    BonusEntryDto: {
-      /** Format: uuid */
-      id: string;
-      /** @description Positive for accruals, negative for spending */
-      amount: number;
-      reason: components['schemas']['BonusReason'];
-      note: string | null;
-      /** Format: date-time */
-      createdAt: string;
-    };
-    LoyaltyDto: {
-      tier: components['schemas']['LoyaltyTier'];
-      /** @example Преміум */
-      label: string;
-      discountPercent: number;
-      pointsPer100Uah: number;
-      perks: string[];
-      bonusBalance: number;
-      /** @description Activities the user has attended */
-      completedVisits: number;
-      /** @description Visits that earn the Premium card */
-      premiumVisits: number;
-      /** @description Latest bonus point movements */
-      history: components['schemas']['BonusEntryDto'][];
     };
     /** @enum {string} */
     NotificationType:
@@ -971,6 +1227,538 @@ export interface components {
       startedAt: string;
       /** @description Duration in milliseconds */
       durationMs: number;
+    };
+    AdminCenterDto: {
+      /** Format: uuid */
+      id: string;
+      slug: string;
+      name: string;
+      description: string;
+      address: string;
+      city: string;
+      latitude: number;
+      longitude: number;
+      phone: string;
+      photoUrl: string | null;
+      openHour: number;
+      closeHour: number;
+      isActive: boolean;
+      hallCount: number;
+      trainerCount: number;
+      sectionCount: number;
+    };
+    CreateCenterDto: {
+      /** @example SportHub Сихів */
+      name: string;
+      /**
+       * @description Part of the page address
+       * @example sporthub-sykhiv
+       */
+      slug: string;
+      description: string;
+      /** @example просп. Червоної Калини, 60 */
+      address: string;
+      /**
+       * @description Львів when omitted
+       * @example Львів
+       */
+      city?: string;
+      /** @example 49.7928 */
+      latitude: number;
+      /** @example 24.0611 */
+      longitude: number;
+      /** @example +380322000000 */
+      phone: string;
+      /** @description URL from POST /admin/photos */
+      photoUrl?: string | null;
+      /** @example 7 */
+      openHour: number;
+      /** @example 22 */
+      closeHour: number;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    UpdateCenterDto: {
+      /** @example SportHub Сихів */
+      name?: string;
+      /**
+       * @description Part of the page address
+       * @example sporthub-sykhiv
+       */
+      slug?: string;
+      description?: string;
+      /** @example просп. Червоної Калини, 60 */
+      address?: string;
+      /**
+       * @description Львів when omitted
+       * @example Львів
+       */
+      city?: string;
+      /** @example 49.7928 */
+      latitude?: number;
+      /** @example 24.0611 */
+      longitude?: number;
+      /** @example +380322000000 */
+      phone?: string;
+      /** @description URL from POST /admin/photos */
+      photoUrl?: string | null;
+      /** @example 7 */
+      openHour?: number;
+      /** @example 22 */
+      closeHour?: number;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    /**
+     * @description DEACTIVATED when bookings refer to the item, so it is kept and hidden
+     * @enum {string}
+     */
+    RemovalResult: 'DELETED' | 'DEACTIVATED';
+    RemovalDto: {
+      /** @description DEACTIVATED when bookings refer to the item, so it is kept and hidden */
+      result: components['schemas']['RemovalResult'];
+    };
+    AdminHallDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      centerId: string;
+      name: string;
+      description: string;
+      kind: components['schemas']['HallKind'];
+      capacity: number;
+      /** @description In kopecks */
+      hourlyPrice: number;
+      photoUrl: string | null;
+      isActive: boolean;
+      sports: components['schemas']['SportDto'][];
+    };
+    CreateHallDto: {
+      /**
+       * @example [
+       *       "yoga",
+       *       "pilates"
+       *     ]
+       */
+      sportSlugs: string[];
+      /** Format: uuid */
+      centerId: string;
+      /** @example Зала йоги */
+      name: string;
+      description: string;
+      kind: components['schemas']['HallKind'];
+      /** @example 20 */
+      capacity: number;
+      /**
+       * @description Price of one hour, in kopecks
+       * @example 50000
+       */
+      hourlyPrice: number;
+      /** @description URL from POST /admin/photos */
+      photoUrl?: string | null;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    UpdateHallDto: {
+      /**
+       * @example [
+       *       "yoga",
+       *       "pilates"
+       *     ]
+       */
+      sportSlugs?: string[];
+      /** @example Зала йоги */
+      name?: string;
+      description?: string;
+      kind?: components['schemas']['HallKind'];
+      /** @example 20 */
+      capacity?: number;
+      /**
+       * @description Price of one hour, in kopecks
+       * @example 50000
+       */
+      hourlyPrice?: number;
+      /** @description URL from POST /admin/photos */
+      photoUrl?: string | null;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    AdminTrainerDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      centerId: string;
+      fullName: string;
+      bio: string;
+      experienceYears: number;
+      /** @description In kopecks */
+      sessionPrice: number;
+      photoUrl: string | null;
+      isActive: boolean;
+      sports: components['schemas']['SportDto'][];
+    };
+    CreateTrainerDto: {
+      /**
+       * @example [
+       *       "yoga",
+       *       "pilates"
+       *     ]
+       */
+      sportSlugs: string[];
+      /** Format: uuid */
+      centerId: string;
+      /** @example Олена Коваль */
+      fullName: string;
+      bio: string;
+      /** @example 5 */
+      experienceYears: number;
+      /** @description Price of a one-hour personal session, in kopecks */
+      sessionPrice: number;
+      /** @description URL from POST /admin/photos */
+      photoUrl?: string | null;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    UpdateTrainerDto: {
+      /**
+       * @example [
+       *       "yoga",
+       *       "pilates"
+       *     ]
+       */
+      sportSlugs?: string[];
+      /** @example Олена Коваль */
+      fullName?: string;
+      bio?: string;
+      /** @example 5 */
+      experienceYears?: number;
+      /** @description Price of a one-hour personal session, in kopecks */
+      sessionPrice?: number;
+      /** @description URL from POST /admin/photos */
+      photoUrl?: string | null;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    AdminSectionDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      centerId: string;
+      name: string;
+      description: string;
+      level: components['schemas']['SkillLevel'];
+      ageGroup: components['schemas']['AgeGroup'];
+      capacity: number;
+      /** @description In kopecks */
+      sessionPrice: number;
+      isActive: boolean;
+      sport: components['schemas']['SportDto'];
+      trainer: components['schemas']['TrainerRefDto'] | null;
+      /** @description Sessions scheduled from now on, not cancelled */
+      upcomingSessions: number;
+    };
+    CreateSectionDto: {
+      /** Format: uuid */
+      centerId: string;
+      /** @example yoga */
+      sportSlug: string;
+      /** Format: uuid */
+      trainerId?: string | null;
+      /** @example Йога для початківців */
+      name: string;
+      description: string;
+      level: components['schemas']['SkillLevel'];
+      ageGroup: components['schemas']['AgeGroup'];
+      /**
+       * @description Default places in a session
+       * @example 12
+       */
+      capacity: number;
+      /**
+       * @description Price of one visit, in kopecks
+       * @example 25000
+       */
+      sessionPrice: number;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    UpdateSectionDto: {
+      /** @example yoga */
+      sportSlug?: string;
+      /** Format: uuid */
+      trainerId?: string | null;
+      /** @example Йога для початківців */
+      name?: string;
+      description?: string;
+      level?: components['schemas']['SkillLevel'];
+      ageGroup?: components['schemas']['AgeGroup'];
+      /**
+       * @description Default places in a session
+       * @example 12
+       */
+      capacity?: number;
+      /**
+       * @description Price of one visit, in kopecks
+       * @example 25000
+       */
+      sessionPrice?: number;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    PhotoDto: {
+      /** @example https://…/storage/v1/object/public/media/catalog/….jpg */
+      url: string;
+    };
+    SectionRefDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
+    CenterNameDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
+    AdminSessionDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      capacity: number;
+      bookedCount: number;
+      isCancelled: boolean;
+      section: components['schemas']['SectionRefDto'];
+      center: components['schemas']['CenterNameDto'];
+      hall: components['schemas']['HallRefDto'];
+      trainer: components['schemas']['TrainerRefDto'] | null;
+      /** @description Pending and confirmed bookings */
+      activeBookings: number;
+    };
+    CreateSessionsDto: {
+      /** Format: uuid */
+      sectionId: string;
+      /**
+       * Format: uuid
+       * @description A hall of the same center
+       */
+      hallId: string;
+      /**
+       * Format: uuid
+       * @description The section's trainer when omitted; null for none
+       */
+      trainerId?: string | null;
+      /**
+       * Format: date-time
+       * @description Start of the first session
+       */
+      startsAt: string;
+      /** @example 60 */
+      durationMinutes: number;
+      /** @description The section's capacity when omitted */
+      capacity?: number;
+      /** @description Repeat weekly at the same Kyiv time; 1 (a single session) when omitted */
+      repeatWeeks?: number;
+    };
+    CancelSessionDto: {
+      /**
+       * @description Shown to the users in the notice
+       * @example Тренер захворів
+       */
+      reason: string;
+    };
+    CancelSessionResultDto: {
+      session: components['schemas']['AdminSessionDto'];
+      /** @description Bookings cancelled with a refund by this request */
+      cancelledBookings: number;
+      /** @description Bookings that could not be cancelled yet; send the request again */
+      stillActive: number;
+    };
+    CenterIdNameDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
+    AdminPromotionDto: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      discountPercent: number;
+      sport: components['schemas']['SportDto'] | null;
+      center: components['schemas']['CenterIdNameDto'] | null;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      isActive: boolean;
+    };
+    CreatePromotionDto: {
+      /** @example Тиждень йоги */
+      title: string;
+      description: string;
+      /** @example 20 */
+      discountPercent: number;
+      /** @description null: any sport */
+      sportSlug?: string | null;
+      /**
+       * Format: uuid
+       * @description null: the whole network
+       */
+      centerId?: string | null;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    UpdatePromotionDto: {
+      /** @example Тиждень йоги */
+      title?: string;
+      description?: string;
+      /** @example 20 */
+      discountPercent?: number;
+      /** @description null: any sport */
+      sportSlug?: string | null;
+      /**
+       * Format: uuid
+       * @description null: the whole network
+       */
+      centerId?: string | null;
+      /** Format: date-time */
+      startsAt?: string;
+      /** Format: date-time */
+      endsAt?: string;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    AdminPlanDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      description: string;
+      kind: components['schemas']['MembershipKind'];
+      /** @description In kopecks */
+      price: number;
+      durationDays: number | null;
+      visits: number | null;
+      sport: components['schemas']['SportDto'] | null;
+      center: components['schemas']['CenterIdNameDto'] | null;
+      isActive: boolean;
+      /** @description Memberships sold on this plan, any status */
+      soldCount: number;
+    };
+    CreatePlanDto: {
+      /** @example Місячний: 8 занять */
+      name: string;
+      description: string;
+      kind: components['schemas']['MembershipKind'];
+      /**
+       * @description Price in kopecks
+       * @example 120000
+       */
+      price: number;
+      /** @description Required for MONTHLY and CORPORATE; null: no time limit */
+      durationDays?: number | null;
+      /** @description null: unlimited visits */
+      visits?: number | null;
+      /** Format: uuid */
+      centerId?: string | null;
+      sportSlug?: string | null;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    UpdatePlanDto: {
+      /** @example Місячний: 8 занять */
+      name?: string;
+      description?: string;
+      kind?: components['schemas']['MembershipKind'];
+      /**
+       * @description Price in kopecks
+       * @example 120000
+       */
+      price?: number;
+      /** @description Required for MONTHLY and CORPORATE; null: no time limit */
+      durationDays?: number | null;
+      /** @description null: unlimited visits */
+      visits?: number | null;
+      /** Format: uuid */
+      centerId?: string | null;
+      sportSlug?: string | null;
+      /** @description True when omitted */
+      isActive?: boolean;
+    };
+    StatsTotalsDto: {
+      /** @description Successful payments minus refunds, in kopecks */
+      revenue: number;
+      /** @description Bookings made in the period that were not cancelled */
+      bookings: number;
+      /** @description Bookings made in the period and later cancelled */
+      cancelled: number;
+      /** @description Clients with at least one booking that was not cancelled */
+      activeClients: number;
+      /** @description Average paid amount of a booking, in kopecks */
+      averageCheck: number;
+    };
+    DailyStatDto: {
+      /**
+       * @description Kyiv calendar day
+       * @example 2026-11-22
+       */
+      date: string;
+      bookings: number;
+      cancelled: number;
+      /** @description In kopecks */
+      revenue: number;
+    };
+    CenterOccupancyDto: {
+      /** Format: uuid */
+      centerId: string;
+      name: string;
+      /** @description Places offered in group sessions */
+      capacity: number;
+      /** @description Places taken */
+      booked: number;
+      /** @description booked / capacity, from 0 to 1 */
+      occupancy: number;
+    };
+    SportPopularityDto: {
+      slug: string;
+      name: string;
+      /** @description Group session bookings that were not cancelled */
+      bookings: number;
+    };
+    TierCountDto: {
+      tier: components['schemas']['LoyaltyTier'];
+      users: number;
+    };
+    BookingTypeCountDto: {
+      type: components['schemas']['BookingType'];
+      bookings: number;
+    };
+    AdminStatsDto: {
+      /**
+       * @description First Kyiv day of the period
+       * @example 2026-10-24
+       */
+      from: string;
+      /**
+       * @description Last Kyiv day of the period (today)
+       * @example 2026-11-22
+       */
+      to: string;
+      totals: components['schemas']['StatsTotalsDto'];
+      /** @description One entry per day, zeros included */
+      daily: components['schemas']['DailyStatDto'][];
+      /** @description Group sessions of the period and the next 14 days */
+      centers: components['schemas']['CenterOccupancyDto'][];
+      /** @description Top sports by group bookings */
+      sports: components['schemas']['SportPopularityDto'][];
+      /** @description Clients by loyalty tier, now */
+      tiers: components['schemas']['TierCountDto'][];
+      bookingTypes: components['schemas']['BookingTypeCountDto'][];
     };
   };
   responses: never;
@@ -1663,6 +2451,26 @@ export interface operations {
       };
     };
   };
+  LoyaltyController_summary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Card, perks, progress and points history */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LoyaltyDto'];
+        };
+      };
+    };
+  };
   MembershipsController_plans: {
     parameters: {
       query?: never;
@@ -1725,6 +2533,13 @@ export interface operations {
           'application/json': components['schemas']['MembershipDto'];
         };
       };
+      /** @description The plan is no longer sold, or a company is missing */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
       /** @description Тариф не знайдено */
       404: {
         headers: {
@@ -1772,25 +2587,12 @@ export interface operations {
         };
         content?: never;
       };
-    };
-  };
-  LoyaltyController_summary: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Card, perks, progress and points history */
-      200: {
+      /** @description The payment service did not answer */
+      502: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': components['schemas']['LoyaltyDto'];
-        };
+        content?: never;
       };
     };
   };
@@ -1899,6 +2701,908 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['JobRunDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_centers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCenterDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_createCenter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCenterDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCenterDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_center: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCenterDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_removeCenter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovalDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_updateCenter: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCenterDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCenterDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_halls: {
+    parameters: {
+      query?: {
+        centerId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminHallDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_createHall: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateHallDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminHallDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_removeHall: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovalDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_updateHall: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateHallDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminHallDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_trainers: {
+    parameters: {
+      query?: {
+        centerId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminTrainerDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_createTrainer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateTrainerDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminTrainerDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_removeTrainer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovalDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_updateTrainer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateTrainerDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminTrainerDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_sections: {
+    parameters: {
+      query?: {
+        centerId?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminSectionDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_createSection: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSectionDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminSectionDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_removeSection: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovalDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_updateSection: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateSectionDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminSectionDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminCatalogController_uploadPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /**
+           * Format: binary
+           * @description JPEG, PNG or WebP
+           */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PhotoDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminScheduleController_list: {
+    parameters: {
+      query?: {
+        sectionId?: string;
+        centerId?: string;
+        /** @description How many days ahead; 14 when omitted */
+        days?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminSessionDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminScheduleController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSessionsDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminSessionDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The hall or trainer is busy at one of the times */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminScheduleController_cancel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CancelSessionDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CancelSessionResultDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The session has already started */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_promotions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminPromotionDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_createPromotion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePromotionDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminPromotionDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_removePromotion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovalDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_updatePromotion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePromotionDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminPromotionDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_plans: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminPlanDto'][];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_createPlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePlanDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminPlanDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_removePlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemovalDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminOffersController_updatePlan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePlanDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminPlanDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AdminStatsController_get: {
+    parameters: {
+      query?: {
+        /** @description Days back from today; 30 when omitted */
+        days?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminStatsDto'];
         };
       };
       /** @description Administrators only */
