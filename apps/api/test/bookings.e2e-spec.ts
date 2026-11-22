@@ -202,7 +202,7 @@ describe('Bookings (e2e)', () => {
       ),
     );
 
-    const statuses = responses.map((res) => res.status).sort();
+    const statuses = responses.map((res) => res.status).sort((a, b) => a - b);
     expect(statuses).toEqual([201, 409, 409, 409, 409, 409]);
     expect(await seats(session.id)).toBe(1);
   });
