@@ -4,12 +4,28 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * SportHub design tokens.
+ *
+ * Colour roles, not raw colours: components use bg-primary, text-ink, etc.,
+ * and the light and dark themes only change the values below.
+ *
+ * Accessibility: orange (#F97316) with white text has a 2.8:1 contrast,
+ * below WCAG AA (4.5:1). Filled orange surfaces therefore carry near-black
+ * text (about 7:1), and orange text on light backgrounds uses the darker
+ * --ink shade (5.2:1).
+ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
+  --font-display: var(--font-unbounded);
+  --color-ink: var(--ink);
+  --color-electric: var(--electric);
+  --color-electric-foreground: var(--electric-foreground);
+  --color-success: var(--success);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,89 +62,372 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Motion: one set of curves and durations for the whole app. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-float: float 14s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.2s var(--ease-out-expo) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  /* Shadows tinted with the brand colour instead of plain grey. */
+  --shadow-glow: 0 10px 40px -12px oklch(0.705 0.213 47.604 / 0.55);
+  --shadow-lift: 0 18px 40px -18px oklch(0.216 0.006 56.043 / 0.35);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.875rem;
+
+  --background: oklch(0.985 0.001 106.4);
+  --foreground: oklch(0.216 0.006 56.043);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.216 0.006 56.043);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.216 0.006 56.043);
+
+  /* Brand orange (#F97316) with near-black text on it. */
+  --primary: oklch(0.705 0.213 47.604);
+  --primary-foreground: oklch(0.147 0.004 49.25);
+  /* Orange for text and icons on light surfaces (orange-700, 5.2:1). */
+  --ink: oklch(0.553 0.195 38.402);
+  /* Secondary "electric" accent (sky). */
+  --electric: oklch(0.685 0.169 237.323);
+  --electric-foreground: oklch(0.147 0.004 49.25);
+  --success: oklch(0.596 0.145 163.225);
+
+  --secondary: oklch(0.97 0.001 106.424);
+  --secondary-foreground: oklch(0.216 0.006 56.043);
+  --muted: oklch(0.97 0.001 106.424);
+  --muted-foreground: oklch(0.553 0.013 58.071);
+  --accent: oklch(0.954 0.038 75.164);
+  --accent-foreground: oklch(0.408 0.123 38.172);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: oklch(0.923 0.003 48.717);
+  --input: oklch(0.923 0.003 48.717);
+  --ring: oklch(0.705 0.213 47.604);
+
+  --chart-1: oklch(0.705 0.213 47.604);
+  --chart-2: oklch(0.685 0.169 237.323);
+  --chart-3: oklch(0.596 0.145 163.225);
+  --chart-4: oklch(0.795 0.184 86.047);
+  --chart-5: oklch(0.553 0.013 58.071);
+
+  --sidebar: oklch(0.985 0.001 106.4);
+  --sidebar-foreground: oklch(0.216 0.006 56.043);
+  --sidebar-primary: oklch(0.705 0.213 47.604);
+  --sidebar-primary-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-accent: oklch(0.954 0.038 75.164);
+  --sidebar-accent-foreground: oklch(0.408 0.123 38.172);
+  --sidebar-border: oklch(0.923 0.003 48.717);
+  --sidebar-ring: oklch(0.705 0.213 47.604);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.16 0.005 50);
+  --foreground: oklch(0.97 0.001 106.424);
+  --card: oklch(0.205 0.006 50);
+  --card-foreground: oklch(0.97 0.001 106.424);
+  --popover: oklch(0.205 0.006 50);
+  --popover-foreground: oklch(0.97 0.001 106.424);
+
+  --primary: oklch(0.705 0.213 47.604);
+  --primary-foreground: oklch(0.147 0.004 49.25);
+  /* On dark backgrounds the lighter orange reads better (orange-400). */
+  --ink: oklch(0.75 0.183 55.934);
+  --electric: oklch(0.746 0.16 232.661);
+  --electric-foreground: oklch(0.147 0.004 49.25);
+  --success: oklch(0.696 0.17 162.48);
+
+  --secondary: oklch(0.268 0.007 34.298);
+  --secondary-foreground: oklch(0.97 0.001 106.424);
+  --muted: oklch(0.268 0.007 34.298);
+  --muted-foreground: oklch(0.709 0.01 56.259);
+  --accent: oklch(0.266 0.079 36.259);
+  --accent-foreground: oklch(0.901 0.076 70.697);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.705 0.213 47.604);
+
+  --chart-1: oklch(0.705 0.213 47.604);
+  --chart-2: oklch(0.746 0.16 232.661);
+  --chart-3: oklch(0.696 0.17 162.48);
+  --chart-4: oklch(0.852 0.199 91.936);
+  --chart-5: oklch(0.709 0.01 56.259);
+
+  --sidebar: oklch(0.205 0.006 50);
+  --sidebar-foreground: oklch(0.97 0.001 106.424);
+  --sidebar-primary: oklch(0.705 0.213 47.604);
+  --sidebar-primary-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-accent: oklch(0.266 0.079 36.259);
+  --sidebar-accent-foreground: oklch(0.901 0.076 70.697);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.705 0.213 47.604);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight text-balance;
+  }
+  ::selection {
+    @apply bg-primary text-primary-foreground;
   }
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
-  html {
-    @apply font-sans;
+  /* A visible focus ring for keyboard users only. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
   }
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(6%, -8%, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-5%, 6%, 0) scale(0.95);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 2rem, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes parallax {
+  to {
+    transform: translate3d(0, 18%, 0) scale(1.08);
+  }
+}
+
+/* Counts an integer custom property up to --target (see <CountUp>). */
+@property --count {
+  syntax: '<integer>';
+  initial-value: 0;
+  inherits: false;
+}
+
+@keyframes count-up {
+  from {
+    --count: 0;
+  }
+  to {
+    --count: var(--target);
+  }
+}
+
+/* ---------- Effects (all use transform/opacity only, so they stay on the GPU) ---------- */
+
+@layer utilities {
+  /* Diagonal sports stripes used as a decorative accent. */
+  .stripes {
+    background-image: repeating-linear-gradient(-45deg, currentColor 0 2px, transparent 2px 12px);
+  }
+
+  /* Text with the brand gradient. */
+  /* background-image, not the background shorthand: the shorthand would be
+     merged with background-clip by the CSS minifier and lose "text". */
+  .text-gradient {
+    background-image: linear-gradient(100deg, var(--primary), oklch(0.795 0.184 86.047));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Card that lifts and glows on hover; the image inside zooms. */
+  .card-lift {
+    transition:
+      transform 300ms var(--ease-out-expo),
+      box-shadow 300ms var(--ease-out-expo),
+      border-color 300ms;
+  }
+  .card-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in oklch, var(--primary) 45%, transparent);
+  }
+  .card-lift .zoom-image {
+    transition: transform 700ms var(--ease-out-expo);
+  }
+  .card-lift:hover .zoom-image {
+    transform: scale(1.06);
+  }
+
+  .count-up {
+    counter-reset: count var(--count);
+  }
+  .count-up::after {
+    content: counter(count);
+  }
+
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--foreground) 6%, transparent),
+      transparent
+    );
+    animation: var(--animate-shimmer);
+  }
+}
+
+/* Motion that depends on scrolling is progressive enhancement: browsers
+   without scroll-driven animations simply show the content. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Blocks slide up as they enter the viewport. */
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+    /* The hero photo moves slower than the page. */
+    .parallax {
+      animation: parallax linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+    /* Counters start when they come into view. */
+    .count-up {
+      animation: count-up 1.8s var(--ease-out-expo) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+  }
+  @supports not (animation-timeline: view()) {
+    .count-up {
+      animation: count-up 1.8s var(--ease-out-expo) both;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count-up {
+    --count: var(--target);
+  }
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Page transitions (React <ViewTransition>) ---------- */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+
+/* Card photo morphing into the hero photo of the detail page. */
+::view-transition-group(.morph) {
+  animation-duration: 450ms;
+  animation-timing-function: var(--ease-out-expo);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: via-blur;
+}
+@keyframes via-blur {
+  30% {
+    filter: blur(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ---------- Leaflet in both themes ---------- */
+
+.leaflet-container {
+  font-family: var(--font-geist-sans), sans-serif;
+  background: var(--muted);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: var(--shadow-lift);
+}
+.leaflet-popup-content a {
+  color: var(--ink);
+}
+/* Dark map without a second tile provider: invert the light tiles and turn
+   the hues back, so water stays blue and parks stay green. */
+.dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
+}
+.dark .leaflet-control-zoom a,
+.dark .leaflet-control-attribution {
+  background: var(--card);
+  color: var(--muted-foreground);
 }
