@@ -10,6 +10,7 @@ import { GroupSessionCreator } from './creators/group-session.creator.js';
 import { HallRentalCreator } from './creators/hall-rental.creator.js';
 import { PersonalTrainingCreator } from './creators/personal-training.creator.js';
 import { PricingService } from './pricing/pricing.service.js';
+import { SessionCancellationListener } from './session-cancellation.listener.js';
 import { BookingValidationChain } from './validation/booking-validation.chain.js';
 
 @Module({
@@ -24,6 +25,7 @@ import { BookingValidationChain } from './validation/booking-validation.chain.js
     PricingService,
     BookingFacade,
     AvailabilityService,
+    SessionCancellationListener,
   ],
   exports: [BookingFacade],
 })
