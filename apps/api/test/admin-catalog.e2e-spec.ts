@@ -267,4 +267,106 @@ describe('Admin catalog (e2e)', () => {
     await admin.delete(`/api/admin/sections/${randomUUID()}`).expect(404);
     await admin.get('/api/admin/centers/not-a-uuid').expect(400);
   });
+
+  it('keeps the hall of a session when its trainer is removed', async () => {
+    const { body: center } = await admin
+      .post('/api/admin/centers', centerBody('three'))
+      .expect(201);
+    const { body: hall } = await admin
+      .post('/api/admin/halls', {
+        centerId: center.id,
+        name: 'Зала сесій',
+        description: '—',
+        kind: 'STUDIO',
+        capacity: 10,
+        hourlyPrice: 10_000,
+        sportSlugs: ['yoga'],
+      })
+      .expect(201);
+    const { body: trainer } = await admin
+      .post('/api/admin/trainers', {
+        centerId: center.id,
+        fullName: 'Тренер Заняття',
+        bio: '—',
+        experienceYears: 1,
+        sessionPrice: 10_000,
+        sportSlugs: ['yoga'],
+      })
+      .expect(201);
+    const { body: section } = await admin
+      .post('/api/admin/sections', {
+        centerId: center.id,
+        sportSlug: 'yoga',
+        trainerId: trainer.id,
+        name: 'Секція з тренером',
+        description: '—',
+        level: 'BEGINNER',
+        ageGroup: 'ADULTS',
+        capacity: 8,
+        sessionPrice: 10_000,
+      })
+      .expect(201);
+    const [session] = (
+      await admin
+        .post('/api/admin/sessions', {
+          sectionId: section.id,
+          hallId: hall.id,
+          startsAt: kyivTime(addDays(kyivDateString(new Date()), 3), 10),
+          durationMinutes: 60,
+        })
+        .expect(201)
+    ).body;
+
+    // No bookings refer to the trainer, but their session still holds the hall.
+    const { body } = await admin.delete(`/api/admin/trainers/${trainer.id}`).expect(200);
+    expect(body.result).toBe('DEACTIVATED');
+    expect(await prisma.occupancy.count({ where: { groupSessionId: session.id } })).toBe(1);
+
+    // A whole center still deletes in one go: the cascade takes the sessions too.
+    const { body: removed } = await admin.delete(`/api/admin/centers/${center.id}`).expect(200);
+    expect(removed.result).toBe('DELETED');
+  });
+
+  it('keeps everything in a closed center closed', async () => {
+    const { body: center } = await admin.post('/api/admin/centers', centerBody('four')).expect(201);
+    const { body: promotion } = await admin
+      .post('/api/admin/promotions', {
+        title: 'Акція закритого центру',
+        description: '—',
+        discountPercent: 10,
+        centerId: center.id,
+        startsAt: new Date(),
+        endsAt: new Date(Date.now() + 86_400_000),
+      })
+      .expect(201);
+    await admin.patch(`/api/admin/centers/${center.id}`, { isActive: false }).expect(200);
+    expect(
+      (await prisma.promotion.findUniqueOrThrow({ where: { id: promotion.id } })).isActive,
+    ).toBe(false);
+
+    const { body: hall } = await admin
+      .post('/api/admin/halls', {
+        centerId: center.id,
+        name: 'Нова зала',
+        description: '—',
+        kind: 'GYM',
+        capacity: 5,
+        hourlyPrice: 10_000,
+        sportSlugs: ['yoga'],
+      })
+      .expect(201);
+    expect(hall.isActive).toBe(false);
+    await admin.patch(`/api/admin/halls/${hall.id}`, { isActive: true }).expect(400);
+
+    await admin.patch(`/api/admin/centers/${center.id}`, { isActive: true }).expect(200);
+    await admin.patch(`/api/admin/halls/${hall.id}`, { isActive: true }).expect(200);
+    await admin.delete(`/api/admin/promotions/${promotion.id}`).expect(200);
+  });
+
+  it('answers 400, not 500, to a required field sent as null', async () => {
+    const center = await prisma.sportCenter.findFirstOrThrow({
+      where: { slug: { startsWith: SLUG_PREFIX } },
+    });
+    await admin.patch(`/api/admin/centers/${center.id}`, { name: null }).expect(400);
+  });
 });

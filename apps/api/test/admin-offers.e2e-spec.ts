@@ -177,6 +177,9 @@ describe('Admin promotions, plans and announcements (e2e)', () => {
     await admin.patch(`/api/admin/plans/${body.id}`, { durationDays: null }).expect(400);
 
     await yogaFan.post('/api/memberships', { planId: body.id }).expect(201);
+    // Its memberships carry the kind, so a sold plan keeps it.
+    await admin.patch(`/api/admin/plans/${body.id}`, { kind: 'SINGLE' }).expect(400);
+    await admin.patch(`/api/admin/plans/${body.id}`, { price: 109_000 }).expect(200);
     const { body: removed } = await admin.delete(`/api/admin/plans/${body.id}`).expect(200);
     expect(removed.result).toBe('DEACTIVATED');
 
