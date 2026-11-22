@@ -25,7 +25,8 @@ export function SeatsMeter({ capacity, seatsLeft }: { capacity: number; seatsLef
             'h-full rounded-full transition-[width] duration-700 ease-(--ease-out-expo)',
             seatsLeft === 0 ? 'bg-destructive' : almostFull ? 'bg-primary' : 'bg-success',
           )}
-          style={{ width: `${Math.max(percent, 4)}%` }}
+          // A sliver for one taken seat stays visible; an empty session shows no fill.
+          style={{ width: `${taken > 0 ? Math.max(percent, 4) : 0}%` }}
         />
       </div>
       <p
