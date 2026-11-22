@@ -9,6 +9,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { addDays, isoWeekday, kyivDateString, kyivTime } from '../src/common/time/kyiv-time.js';
 import { CENTERS, PLANS, PROMOTIONS, SPORTS } from './seed-data.js';
+import { CENTER_PHOTOS, publicPhotoUrl, SPORT_PHOTOS } from './seed-photos.js';
 
 const SCHEDULE_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -30,8 +31,12 @@ async function seedSports(): Promise<Map<string, string>> {
   for (const sport of SPORTS) {
     const row = await prisma.sport.upsert({
       where: { slug: sport.slug },
-      create: sport,
-      update: { name: sport.name, icon: sport.icon },
+      create: { ...sport, photoUrl: publicPhotoUrl(SPORT_PHOTOS[sport.slug]) },
+      update: {
+        name: sport.name,
+        icon: sport.icon,
+        photoUrl: publicPhotoUrl(SPORT_PHOTOS[sport.slug]),
+      },
     });
     ids.set(sport.slug, row.id);
   }
@@ -45,13 +50,18 @@ async function seedCenters(sportIds: Map<string, string>): Promise<number> {
   for (const { halls, trainers, sections, ...center } of CENTERS) {
     const { id: centerId } = await prisma.sportCenter.upsert({
       where: { slug: center.slug },
-      create: center,
-      update: center,
+      create: { ...center, photoUrl: publicPhotoUrl(CENTER_PHOTOS[center.slug]) },
+      update: { ...center, photoUrl: publicPhotoUrl(CENTER_PHOTOS[center.slug]) },
     });
 
     const hallIds = new Map<string, string>();
     for (const { sports, hourlyPriceUah, ...hall } of halls) {
-      const data = { ...hall, hourlyPrice: kopecks(hourlyPriceUah) };
+      // A hall shows the photo of its main sport.
+      const data = {
+        ...hall,
+        hourlyPrice: kopecks(hourlyPriceUah),
+        photoUrl: publicPhotoUrl(SPORT_PHOTOS[sports[0]]),
+      };
       const row = await prisma.hall.upsert({
         where: { centerId_name: { centerId, name: hall.name } },
         create: { ...data, centerId, sports: { connect: sportRefs(sports) } },
