@@ -98,8 +98,12 @@ export abstract class PriceDecorator implements PriceCalculator {
 
 /** A membership that covers the booking makes it free. */
 export class MembershipDecorator extends PriceDecorator {
-  protected apply(price: PriceCalculation, { membership }: PricingContext): PriceCalculation {
-    if (!membership) return price;
+  protected apply(
+    price: PriceCalculation,
+    { membership, policy, subject }: PricingContext,
+  ): PriceCalculation {
+    // A booking the loyalty card already makes free keeps the membership visit.
+    if (!membership || policy.coversForFree(subject)) return price;
     return this.discounted(price, 'MEMBERSHIP', `Абонемент «${membership.planName}»`, price.total);
   }
 }
