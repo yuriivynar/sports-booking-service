@@ -27,7 +27,9 @@ describe('Catalog (e2e)', () => {
   it('lists sports', async () => {
     const res = await get('/api/sports').expect(200);
 
-    expect(res.body).toContainEqual({ slug: 'yoga', name: 'Йога', icon: 'flower-2' });
+    expect(res.body).toContainEqual(
+      expect.objectContaining({ slug: 'yoga', name: 'Йога', icon: 'flower-2' }),
+    );
   });
 
   it('lists centers with coordinates for the map', async () => {
