@@ -116,7 +116,11 @@ export class NotificationsService implements OnModuleInit {
       });
     } catch (error) {
       // The in-app notification is already saved; a mail outage must not fail the booking.
-      this.logger.warn(`Email for notification ${notification.id} failed: ${String(error)}`);
+      // Only the error code: SMTP messages often quote the recipient's address.
+      const code = (error as { code?: string; responseCode?: number }) ?? {};
+      this.logger.warn(
+        `Email for notification ${notification.id} failed: ${code.code ?? code.responseCode ?? 'unknown error'}`,
+      );
     }
   }
 }
