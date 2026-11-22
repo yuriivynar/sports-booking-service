@@ -4,6 +4,8 @@ import { ApiUnavailable } from '@/components/api-unavailable';
 import { PageHeader } from '@/components/layout/page-header';
 import { AvatarUploader } from '@/components/profile/avatar-uploader';
 import { LoyaltyCard } from '@/components/profile/loyalty-card';
+import { LoyaltyPanel } from '@/components/profile/loyalty-panel';
+import { OffersSection } from '@/components/profile/offers-section';
 import { apiClient } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
 import { ProfileForm } from './profile-form';
@@ -15,10 +17,17 @@ export default async function ProfilePage() {
   if (!token) redirect('/login?next=/profile');
 
   const api = apiClient(token);
-  const result = await Promise.all([api.GET('/api/me'), api.GET('/api/sports')]).catch(() => null);
+  const result = await Promise.all([
+    api.GET('/api/me'),
+    api.GET('/api/sports'),
+    api.GET('/api/me/loyalty'),
+    api.GET('/api/me/offers'),
+  ]).catch(() => null);
   if (result?.[0].response.status === 401) redirect('/login?next=/profile');
   const profile = result?.[0].data;
   const sports = result?.[1].data ?? [];
+  const loyalty = result?.[2].data;
+  const offers = result?.[3].data;
 
   return (
     <>
@@ -38,11 +47,17 @@ export default async function ProfilePage() {
               <p className="text-sm text-muted-foreground">
                 1 бал = 1 гривня знижки на наступне бронювання.
               </p>
+              {loyalty && <LoyaltyPanel loyalty={loyalty} />}
             </aside>
             <section className="rounded-3xl border bg-card p-6 sm:p-8">
               <h2 className="mb-6 text-2xl font-bold">Особисті дані та вподобання</h2>
               <ProfileForm profile={profile} sports={sports} />
             </section>
+          </div>
+        )}
+        {offers && (
+          <div className="mt-12">
+            <OffersSection offers={offers} />
           </div>
         )}
       </div>
