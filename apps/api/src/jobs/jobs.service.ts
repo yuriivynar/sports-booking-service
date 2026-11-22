@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BookingFacade } from '../bookings/booking.facade.js';
-import { BOOKING_INCLUDE, bookingTitle } from '../bookings/booking.mapper.js';
+import {
+  BOOKING_INCLUDE,
+  bookingTitle,
+  NOT_IN_CANCELLED_SESSION,
+} from '../bookings/booking.mapper.js';
 import { EventBus } from '../events/event-bus.js';
 import { MembershipsService } from '../memberships/memberships.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -27,12 +31,16 @@ export class JobsService {
   async runMaintenance(now: Date = new Date()): Promise<JobRunDto> {
     const started = Date.now();
     const releasedHolds = await this.bookings.releaseExpiredHolds(now, { drain: true });
+    const sessionBookingsCancelled = await this.bookings.finishSessionCancellations(now);
+    const refundsRetried = await this.bookings.retryMissingRefunds(now);
     const completedBookings = await this.bookings.completeFinishedBookings(now);
     const expiredMemberships = await this.memberships.expireEnded(now);
     const reminders2h = await this.sendReminders(now, 2, 'reminder2hSentAt');
     const reminders24h = await this.sendReminders(now, 24, 'reminder24hSentAt');
     return {
       releasedHolds,
+      sessionBookingsCancelled,
+      refundsRetried,
       completedBookings,
       expiredMemberships,
       reminders24h,
@@ -56,6 +64,7 @@ export class JobsService {
       where: {
         status: 'CONFIRMED',
         [column]: null,
+        ...NOT_IN_CANCELLED_SESSION,
         startsAt: {
           gt: new Date(now.getTime() + (hours - REMINDER_WINDOW_HOURS) * HOUR_MS),
           lte: new Date(now.getTime() + hours * HOUR_MS),

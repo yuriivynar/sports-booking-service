@@ -2,6 +2,14 @@ import type { Prisma } from '../generated/prisma/client.js';
 import type { BookingDto, PriceLineDto } from './dto/booking.dto.js';
 import { BookingLifecycle } from './state/booking-state.js';
 
+/**
+ * Bookings in a session the center called off: they never complete, earn
+ * points or get reminders, even if their own cancellation has not finished.
+ */
+export const NOT_IN_CANCELLED_SESSION = {
+  NOT: { groupSession: { is: { isCancelled: true } } },
+} satisfies Prisma.BookingWhereInput;
+
 /** An unpaid booking holds its place for this long. */
 export const HOLD_MS = 15 * 60 * 1000;
 

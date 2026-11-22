@@ -21,6 +21,7 @@ import {
   bookingTitle,
   HOLD_MS,
   holdExpired,
+  NOT_IN_CANCELLED_SESSION,
   toBookingDto,
 } from './booking.mapper.js';
 import type { BookingRequest, MembershipForBooking } from './booking-request.js';
@@ -36,6 +37,9 @@ const HOLD_EXPIRED_REASON = 'Час на оплату минув';
 const SWEEP_BATCH = 20;
 /** A scheduled sweep stops after this long; the next run continues the queue. */
 const SWEEP_BUDGET_MS = 10_000;
+/** A refund still missing this long after the cancellation is retried by the job. */
+const REFUND_GRACE_MS = 10 * 60 * 1000;
+const CENTER_CANCEL_REASON = 'Заняття скасовано центром';
 
 type EventBase = Omit<EventOf<'booking.created'>, 'type' | 'finalPrice'>;
 
@@ -256,6 +260,80 @@ export class BookingFacade {
     );
   }
 
+  /**
+   * Safety net for session cancellations that did not finish (a refund
+   * failed, or the function stopped half-way): a cancelled session that
+   * still has active bookings is swept again, with the reason the other
+   * participants were given.
+   */
+  async finishSessionCancellations(now = new Date()): Promise<number> {
+    const sessions = await this.prisma.groupSession.findMany({
+      where: {
+        isCancelled: true,
+        startsAt: { gt: now },
+        bookings: { some: { status: { in: ['PENDING', 'CONFIRMED'] } } },
+      },
+      select: {
+        id: true,
+        bookings: {
+          where: { status: 'CANCELLED', cancelReason: { not: null } },
+          select: { cancelReason: true },
+          orderBy: { cancelledAt: 'desc' },
+          take: 1,
+        },
+      },
+      take: SWEEP_BATCH,
+    });
+    let cancelled = 0;
+    for (const session of sessions) {
+      const reason = session.bookings[0]?.cancelReason ?? CENTER_CANCEL_REASON;
+      cancelled += await this.cancelSessionBookings(session.id, reason, now);
+    }
+    return cancelled;
+  }
+
+  /**
+   * Safety net for refunds. Every cancellation refunds in full, so a
+   * cancelled booking whose payment is still SUCCEEDED means the refund
+   * failed or never ran. The payment is claimed with a conditional update
+   * before the gateway is called, so two overlapping runs never refund it
+   * twice; a failed refund puts the claim back for the next run.
+   */
+  async retryMissingRefunds(now = new Date()): Promise<number> {
+    const stuck = await this.prisma.payment.findMany({
+      where: {
+        status: 'SUCCEEDED',
+        booking: {
+          status: 'CANCELLED',
+          cancelledAt: { lte: new Date(now.getTime() - REFUND_GRACE_MS) },
+        },
+      },
+      select: { id: true, providerRef: true, amount: true },
+      orderBy: { createdAt: 'asc' },
+      take: SWEEP_BATCH,
+    });
+    let refunded = 0;
+    for (const payment of stuck) {
+      if (!payment.providerRef) continue;
+      const { count } = await this.prisma.payment.updateMany({
+        where: { id: payment.id, status: 'SUCCEEDED' },
+        data: { status: 'REFUNDED', failureReason: null },
+      });
+      if (count === 0) continue;
+      try {
+        await this.payments.refund(payment.providerRef, payment.amount);
+        refunded++;
+      } catch (error) {
+        this.logger.error(`Retried refund of payment ${payment.id} failed`, error);
+        await this.prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: 'SUCCEEDED', failureReason: 'Повернення не вдалося, потрібне втручання' },
+        });
+      }
+    }
+    return refunded;
+  }
+
   async listMine(userId: string): Promise<BookingDto[]> {
     const now = new Date();
     await this.releaseExpiredHolds(now);
@@ -320,7 +398,12 @@ export class BookingFacade {
     return this.sweep(
       (skip) =>
         this.prisma.booking.findMany({
-          where: { status: 'CONFIRMED', endsAt: { lte: now }, id: { notIn: skip } },
+          where: {
+            status: 'CONFIRMED',
+            endsAt: { lte: now },
+            id: { notIn: skip },
+            ...NOT_IN_CANCELLED_SESSION,
+          },
           include: BOOKING_INCLUDE,
           orderBy: { endsAt: 'asc' },
           take: SWEEP_BATCH,
