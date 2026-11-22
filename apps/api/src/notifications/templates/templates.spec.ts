@@ -1,6 +1,8 @@
 import type { EventOf } from '../../events/domain-events.js';
 import { escapeHtml } from './notification-template.js';
 import {
+  NewSectionTemplate,
+  PromotionTemplate,
   BookingCancelledTemplate,
   BookingConfirmedTemplate,
   ReminderTemplate,
@@ -94,5 +96,43 @@ describe('Notification templates (Template Method)', () => {
     expect(html).not.toContain('<b>Eve</b>');
     expect(html).toContain('&lt;script&gt;');
     expect(escapeHtml(`"'&`)).toBe('&quot;&#39;&amp;');
+  });
+
+  it('links a new section and a promotion to where they can be booked', () => {
+    const sport = { id: 's1', slug: 'yoga', name: 'Йога' };
+    const section = new NewSectionTemplate().render(
+      {
+        type: 'section.published',
+        sectionId: 'sec-1',
+        name: 'Йога на світанку',
+        centerName: 'SportHub Центр',
+        sport,
+      },
+      { fullName: null },
+      web,
+    );
+    expect(section).toMatchObject({ type: 'NEW_SECTION', link: '/sections/sec-1' });
+
+    const promotion = (sportOfPromotion: typeof sport | null) =>
+      new PromotionTemplate().render(
+        {
+          type: 'promotion.published',
+          promotionId: 'p1',
+          title: 'Тиждень йоги',
+          description: 'Знижка на йогу',
+          discountPercent: 20,
+          startsAt: new Date(Date.now() + 86_400_000),
+          endsAt: new Date(Date.now() + 7 * 86_400_000),
+          sport: sportOfPromotion,
+        },
+        { fullName: null },
+        web,
+      );
+    expect(promotion(sport)).toMatchObject({
+      title: 'Знижка 20%: Тиждень йоги',
+      link: '/catalog?sport=yoga',
+    });
+    expect(promotion(sport).body).toContain('Діє з ');
+    expect(promotion(null).link).toBe('/catalog');
   });
 });

@@ -10,6 +10,7 @@ import {
   PG_UNIQUE_VIOLATION,
   postgresErrorCode,
 } from '../common/database-errors.js';
+import { EventBus } from '../events/event-bus.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { FileStorage } from '../storage/file-storage.js';
@@ -48,6 +49,7 @@ export class AdminCatalogService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: FileStorage,
+    private readonly events: EventBus,
   ) {}
 
   // ---------- Centers ----------
@@ -219,6 +221,7 @@ export class AdminCatalogService {
         include: sectionInclude(new Date()),
       }),
     );
+    await this.announceSection(row);
     return toSectionDto(row);
   }
 
@@ -234,6 +237,8 @@ export class AdminCatalogService {
         include: sectionInclude(new Date()),
       }),
     );
+    // Switching a section on is news; editing an open one is not.
+    if (!current.isActive) await this.announceSection(row);
     return toSectionDto(row);
   }
 
@@ -245,6 +250,18 @@ export class AdminCatalogService {
       () => this.prisma.section.delete({ where: { id } }),
       () => this.prisma.section.update({ where: { id }, data: { isActive: false } }),
     );
+  }
+
+  /** Observer: the notifications module tells the fans of the sport. */
+  private async announceSection(row: SectionRow): Promise<void> {
+    if (!row.isActive || !row.center.isActive) return;
+    await this.events.publish({
+      type: 'section.published',
+      sectionId: row.id,
+      name: row.name,
+      centerName: row.center.name,
+      sport: { id: row.sportId, slug: row.sport.slug, name: row.sport.name },
+    });
   }
 
   // ---------- Photos ----------
@@ -369,6 +386,7 @@ function toCenterDto({ _count, ...center }: CenterRow): AdminCenterDto {
 function sectionInclude(now: Date) {
   return {
     sport: SPORT_SELECT,
+    center: { select: { name: true, isActive: true } },
     trainer: { select: { id: true, fullName: true } },
     _count: { select: { sessions: { where: { startsAt: { gt: now }, isCancelled: false } } } },
   } satisfies Prisma.SectionInclude;

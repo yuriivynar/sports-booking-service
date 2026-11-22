@@ -11,8 +11,19 @@ import {
   BookingCancelledTemplate,
   BookingConfirmedTemplate,
   MembershipActivatedTemplate,
+  NewSectionTemplate,
+  PromotionTemplate,
   ReminderTemplate,
 } from './templates/templates.js';
+
+/** Most recipients one announcement reaches. */
+const MAX_AUDIENCE = 1000;
+/**
+ * Most emails one event sends. Handlers run before the response (see
+ * EventBus), so a large mailing would hold the request; the rest still
+ * get the in-app notification.
+ */
+const MAX_EMAILS_PER_EVENT = 50;
 
 /** Events addressed to one user. */
 type UserEventType = {
@@ -44,6 +55,10 @@ export class NotificationsService implements OnModuleInit {
     this.on('booking.reminder', new ReminderTemplate());
     this.on('membership.activated', new MembershipActivatedTemplate());
     this.on('booking.completed', new BonusEarnedTemplate(), (e) => e.pointsEarned > 0);
+    this.announce('section.published', new NewSectionTemplate(), (e) => this.fansOf(e.sport.id));
+    this.announce('promotion.published', new PromotionTemplate(), (e) =>
+      this.fansOf(e.sport?.id ?? null),
+    );
   }
 
   async list(userId: string): Promise<NotificationListDto> {
@@ -94,40 +109,76 @@ export class NotificationsService implements OnModuleInit {
     this.events.subscribe(type, async (event) => {
       // UserEventType admits only events that carry a recipient.
       const { userId } = event as { userId: string };
-      if (when(event)) await this.deliver(userId, event, template);
+      if (when(event)) await this.deliver([userId], event, template);
     });
   }
 
-  private async deliver<E>(userId: string, event: E, template: NotificationTemplate<E>) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, fullName: true, emailNotifications: true },
+  /** Subscribes a template to an event addressed to many users. */
+  private announce<T extends DomainEventType>(
+    type: T,
+    template: NotificationTemplate<EventOf<T>>,
+    audience: (event: EventOf<T>) => Promise<string[]>,
+  ): void {
+    this.events.subscribe(type, async (event) => {
+      await this.deliver(await audience(event), event, template);
     });
-    if (!user) return;
-    const rendered = template.render(event, user, this.webOrigin);
-    const notification = await this.prisma.notification.create({
-      data: {
-        userId,
-        type: rendered.type,
-        title: rendered.title,
-        body: rendered.body,
-        link: rendered.link,
-      },
+  }
+
+  /** Users who picked the sport as a favourite; for no sport, every client. */
+  private async fansOf(sportId: string | null): Promise<string[]> {
+    const users = await this.prisma.user.findMany({
+      where: sportId ? { preferredSports: { some: { id: sportId } } } : { role: 'CLIENT' },
+      select: { id: true },
+      orderBy: { createdAt: 'asc' },
+      take: MAX_AUDIENCE,
     });
-    if (!user.emailNotifications) return;
-    try {
-      await this.email.send({ to: user.email, ...rendered.email });
-      await this.prisma.notification.update({
-        where: { id: notification.id },
-        data: { emailSentAt: new Date() },
-      });
-    } catch (error) {
-      // The in-app notification is already saved; a mail outage must not fail the booking.
-      // Only the error code: SMTP messages often quote the recipient's address.
-      const code = (error as { code?: string; responseCode?: number }) ?? {};
+    return users.map((user) => user.id);
+  }
+
+  /**
+   * Saves one in-app notification per recipient in a single insert, then
+   * emails those who want email. A mail failure never undoes the saved
+   * notifications or the action that caused the event.
+   */
+  private async deliver<E>(userIds: string[], event: E, template: NotificationTemplate<E>) {
+    if (userIds.length === 0) return;
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, email: true, fullName: true, emailNotifications: true },
+    });
+    const rendered = new Map(
+      users.map((user) => [user.id, template.render(event, user, this.webOrigin)]),
+    );
+    const created = await this.prisma.notification.createManyAndReturn({
+      data: users.map((user) => {
+        const { type, title, body, link } = rendered.get(user.id)!;
+        return { userId: user.id, type, title, body, link };
+      }),
+      select: { id: true, userId: true },
+    });
+
+    const byId = new Map(users.map((user) => [user.id, user]));
+    const mailTo = created.filter((n) => byId.get(n.userId)!.emailNotifications);
+    if (mailTo.length > MAX_EMAILS_PER_EVENT) {
       this.logger.warn(
-        `Email for notification ${notification.id} failed: ${code.code ?? code.responseCode ?? 'unknown error'}`,
+        `${mailTo.length} emails for one event; sending the first ${MAX_EMAILS_PER_EVENT}`,
       );
+    }
+    for (const notification of mailTo.slice(0, MAX_EMAILS_PER_EVENT)) {
+      const user = byId.get(notification.userId)!;
+      try {
+        await this.email.send({ to: user.email, ...rendered.get(user.id)!.email });
+        await this.prisma.notification.update({
+          where: { id: notification.id },
+          data: { emailSentAt: new Date() },
+        });
+      } catch (error) {
+        // Only the error code: SMTP messages often quote the recipient's address.
+        const code = (error as { code?: string; responseCode?: number }) ?? {};
+        this.logger.warn(
+          `Email for notification ${notification.id} failed: ${code.code ?? code.responseCode ?? 'unknown error'}`,
+        );
+      }
     }
   }
 }
