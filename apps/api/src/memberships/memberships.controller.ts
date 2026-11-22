@@ -1,5 +1,7 @@
 import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import {
+  ApiBadGatewayResponse,
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -37,6 +39,7 @@ export class MembershipsController {
   @Post('memberships')
   @ApiCreatedResponse({ type: MembershipDto, description: 'PENDING until paid' })
   @ApiNotFoundResponse({ description: 'Тариф не знайдено' })
+  @ApiBadRequestResponse({ description: 'The plan is no longer sold, or a company is missing' })
   purchase(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: PurchaseMembershipDto,
@@ -50,6 +53,7 @@ export class MembershipsController {
   @ApiOkResponse({ type: MembershipDto, description: 'Paid and active from now' })
   @ApiPaymentRequiredResponse({ description: 'The card was declined' })
   @ApiConflictResponse({ description: 'Already paid or cancelled' })
+  @ApiBadGatewayResponse({ description: 'The payment service did not answer' })
   pay(
     @CurrentUser() user: CurrentUserData,
     @Param('id', ParseUUIDPipe) id: string,

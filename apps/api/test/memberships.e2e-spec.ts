@@ -181,4 +181,51 @@ describe('Memberships and loyalty (e2e)', () => {
     });
     expect(body.perks.length).toBeGreaterThan(0);
   });
+
+  it('reuses the unpaid membership when the same plan is bought again', async () => {
+    const user = await newUser();
+    const plan = await planId('Разове відвідування');
+    const first = await user.post('/api/memberships', { planId: plan }).expect(201);
+    const second = await user.post('/api/memberships', { planId: plan }).expect(201);
+
+    expect(second.body.id).toBe(first.body.id);
+    expect((await user.get('/api/memberships').expect(200)).body).toHaveLength(1);
+  });
+
+  it('charges once when the same membership is paid twice at once', async () => {
+    const user = await newUser();
+    const { body } = await user
+      .post('/api/memberships', { planId: await planId('Разове відвідування') })
+      .expect(201);
+
+    const results = await Promise.all([
+      user.post(`/api/memberships/${body.id}/pay`, GOOD_CARD),
+      user.post(`/api/memberships/${body.id}/pay`, GOOD_CARD),
+    ]);
+
+    expect(results.map((r) => r.status).sort((a, b) => a - b)).toEqual([200, 409]);
+    const payments = await prisma.payment.findMany({ where: { membershipId: body.id } });
+    expect(payments.filter((p) => p.status === 'SUCCEEDED')).toHaveLength(1);
+  });
+
+  it('prices with the real tier even before the job expires an ended membership', async () => {
+    const user = await newUser();
+    const { body } = await user
+      .post('/api/memberships', { planId: await planId('Місячний безліміт') })
+      .expect(201);
+    await user.post(`/api/memberships/${body.id}/pay`, GOOD_CARD).expect(200);
+    // The period ended, but no job has run yet: the stored tier still says Premium.
+    await prisma.membership.update({
+      where: { id: body.id },
+      data: { endsAt: new Date(Date.now() - 1000) },
+    });
+    const session = await prisma.groupSession.findFirstOrThrow({
+      where: { isCancelled: false, startsAt: { gt: new Date(Date.now() + 3 * 60 * 60 * 1000) } },
+    });
+
+    const { body: quote } = await user
+      .post('/api/bookings/quote', { type: 'GROUP_SESSION', groupSessionId: session.id })
+      .expect(200);
+    expect(quote.loyaltyTier).toBe('STANDARD');
+  });
 });
