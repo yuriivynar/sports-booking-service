@@ -12,6 +12,7 @@ import type { EventOf } from '../events/domain-events.js';
 import { EventBus } from '../events/event-bus.js';
 import type { BonusReason, BookingStatus } from '../generated/prisma/client.js';
 import { loyaltyPolicyFor } from '../loyalty/loyalty-policy.js';
+import { LoyaltyService } from '../loyalty/loyalty.service.js';
 import { PaymentGateway, type CardDetails } from '../payments/payment-gateway.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -31,8 +32,10 @@ import { BookingLifecycle } from './state/booking-state.js';
 import { BookingValidationChain } from './validation/booking-validation.chain.js';
 
 const HOLD_EXPIRED_REASON = 'Час на оплату минув';
-/** How many rows one maintenance sweep handles; the next request or job takes the rest. */
+/** Rows loaded at a time by a maintenance sweep. */
 const SWEEP_BATCH = 20;
+/** A scheduled sweep stops after this long; the next run continues the queue. */
+const SWEEP_BUDGET_MS = 10_000;
 
 type EventBase = Omit<EventOf<'booking.created'>, 'type' | 'finalPrice'>;
 
@@ -56,6 +59,7 @@ export class BookingFacade {
     private readonly pricing: PricingService,
     private readonly payments: PaymentGateway,
     private readonly events: EventBus,
+    private readonly loyalty: LoyaltyService,
   ) {}
 
   /** Checks a request and prices it without saving anything. */
@@ -176,10 +180,8 @@ export class BookingFacade {
       throw new HttpException(result.reason, HttpStatus.PAYMENT_REQUIRED);
     }
 
-    const { loyaltyTier } = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { loyaltyTier: true },
-    });
+    // Recomputed, not read: a membership may have ended since the last job run.
+    const loyaltyTier = await this.loyalty.recalculateTier(userId);
     const pointsEarned = loyaltyPolicyFor(loyaltyTier).pointsFor(booking.finalPrice);
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -239,29 +241,35 @@ export class BookingFacade {
 
   /**
    * Cancels unpaid bookings whose hold has run out, so their places are
-   * free again. Runs before each quote and booking, and from the
-   * scheduled maintenance job.
+   * free again. User requests run one small batch; the scheduled job
+   * passes `drain` and works through the whole queue.
    */
-  async releaseExpiredHolds(now: Date = new Date()): Promise<number> {
-    const stale = await this.prisma.booking.findMany({
-      where: { status: 'PENDING', createdAt: { lte: new Date(now.getTime() - HOLD_MS) } },
-      include: BOOKING_INCLUDE,
-      take: SWEEP_BATCH,
-    });
-    let released = 0;
-    for (const booking of stale) {
-      try {
-        await this.cancelReservation(booking, HOLD_EXPIRED_REASON, now, { kind: 'hold-expiry' });
-        released++;
-      } catch (error) {
-        // Another request released it first, or this row has a problem:
-        // either way one bad row must not block everybody's bookings.
-        if (!(error instanceof ConflictException)) {
-          this.logger.error(`Could not release hold ${booking.id}`, error);
+  async releaseExpiredHolds(now: Date = new Date(), { drain = false } = {}): Promise<number> {
+    return this.sweep(
+      (skip) =>
+        this.prisma.booking.findMany({
+          where: {
+            status: 'PENDING',
+            createdAt: { lte: new Date(now.getTime() - HOLD_MS) },
+            id: { notIn: skip },
+          },
+          include: BOOKING_INCLUDE,
+          orderBy: { createdAt: 'asc' },
+          take: SWEEP_BATCH,
+        }),
+      async (booking) => {
+        try {
+          await this.cancelReservation(booking, HOLD_EXPIRED_REASON, now, { kind: 'hold-expiry' });
+          return true;
+        } catch (error) {
+          // Another request released it first: not a failure.
+          if (error instanceof ConflictException) return false;
+          throw error;
         }
-      }
-    }
-    return released;
+      },
+      drain,
+      'release hold',
+    );
   }
 
   /**
@@ -270,15 +278,16 @@ export class BookingFacade {
    * be cancelled, so a reward is never handed out and then taken back.
    */
   async completeFinishedBookings(now: Date = new Date()): Promise<number> {
-    const finished = await this.prisma.booking.findMany({
-      where: { status: 'CONFIRMED', endsAt: { lte: now } },
-      include: BOOKING_INCLUDE,
-      take: SWEEP_BATCH,
-    });
-    let completed = 0;
-    for (const booking of finished) {
-      const status = new BookingLifecycle(booking.status, booking, now).complete();
-      try {
+    return this.sweep(
+      (skip) =>
+        this.prisma.booking.findMany({
+          where: { status: 'CONFIRMED', endsAt: { lte: now }, id: { notIn: skip } },
+          include: BOOKING_INCLUDE,
+          orderBy: { endsAt: 'asc' },
+          take: SWEEP_BATCH,
+        }),
+      async (booking) => {
+        const status = new BookingLifecycle(booking.status, booking, now).complete();
         const done = await this.prisma.$transaction(async (tx) => {
           const { count } = await tx.booking.updateMany({
             where: { id: booking.id, status: 'CONFIRMED' },
@@ -296,29 +305,59 @@ export class BookingFacade {
           }
           return true;
         });
-        if (!done) continue;
-        completed++;
-        await this.events.publish({
-          type: 'booking.completed',
-          pointsEarned: booking.pointsEarned,
-          ...eventBase(booking),
-        });
-      } catch (error) {
-        this.logger.error(`Could not complete booking ${booking.id}`, error);
+        if (done) {
+          await this.events.publish({
+            type: 'booking.completed',
+            pointsEarned: booking.pointsEarned,
+            ...eventBase(booking),
+          });
+        }
+        return done;
+      },
+      true,
+      'complete booking',
+    );
+  }
+
+  /**
+   * Works through a queue in batches. Every row is tried once per call:
+   * rows that fail are logged and skipped, so they cannot block the rows
+   * behind them. Stops when the queue is empty, after one batch unless
+   * `drain`, or when the time budget runs out.
+   */
+  private async sweep<T extends { id: string }>(
+    load: (skip: string[]) => Promise<T[]>,
+    handle: (row: T) => Promise<boolean>,
+    drain: boolean,
+    what: string,
+  ): Promise<number> {
+    const deadline = Date.now() + SWEEP_BUDGET_MS;
+    const seen: string[] = [];
+    let done = 0;
+    for (;;) {
+      const rows = await load(seen);
+      for (const row of rows) {
+        seen.push(row.id);
+        try {
+          if (await handle(row)) done++;
+        } catch (error) {
+          this.logger.error(`Could not ${what} ${row.id}`, error);
+        }
       }
+      if (!drain || rows.length < SWEEP_BATCH || Date.now() > deadline) return done;
     }
-    return completed;
   }
 
   private async prepare(userId: string, request: BookingRequest, now: Date) {
     const draft = await this.creators.for(request.type).prepare(request);
-    const [buyer, membership] = await Promise.all([
-      this.prisma.user.findUniqueOrThrow({
-        where: { id: userId },
-        select: { loyaltyTier: true, bonusBalance: true },
-      }),
+    const [loyaltyTier, { bonusBalance }, membership] = await Promise.all([
+      // The tier that decides the discount is computed now, so a stale stored
+      // value (an expired membership the job has not seen yet) never applies.
+      this.loyalty.recalculateTier(userId),
+      this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { bonusBalance: true } }),
       this.loadMembership(userId, request.membershipId),
     ]);
+    const buyer = { loyaltyTier, bonusBalance };
     await this.validation.validate({ draft, userId, membership, now });
     const quote = await this.pricing.quote(
       draft,

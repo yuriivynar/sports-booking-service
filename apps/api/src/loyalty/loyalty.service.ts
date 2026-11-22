@@ -55,6 +55,7 @@ export class LoyaltyService implements OnModuleInit {
   }
 
   async summary(userId: string): Promise<LoyaltyDto> {
+    await this.recalculateTier(userId);
     const [user, completedVisits, history] = await Promise.all([
       this.prisma.user.findUniqueOrThrow({
         where: { id: userId },
