@@ -1,12 +1,15 @@
 import type { LoyaltyPolicy, LoyaltySubject } from '../../loyalty/loyalty-policy.js';
 
-/** One kopeck-exact line of the price breakdown the user sees. */
-export interface PriceLine {
+/**
+ * One kopeck-exact line of the price breakdown the user sees. A type alias
+ * rather than an interface, so it fits Prisma's JSON column type.
+ */
+export type PriceLine = {
   kind: 'BASE' | 'MEMBERSHIP' | 'PROMOTION' | 'LOYALTY' | 'BONUS_POINTS';
   label: string;
   /** Kopecks: positive for the base price, negative for reductions. */
   amount: number;
-}
+};
 
 export interface PromotionOffer {
   id: string;
