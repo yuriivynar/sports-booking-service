@@ -14,6 +14,11 @@ import {
   ReminderTemplate,
 } from './templates/templates.js';
 
+/** Events addressed to one user. */
+type UserEventType = {
+  [K in DomainEventType]: EventOf<K> extends { userId: string } ? K : never;
+}[DomainEventType];
+
 /**
  * Observer: turns domain events into in-app notifications and emails.
  * The booking and membership code only publishes events; adding a new
@@ -81,13 +86,15 @@ export class NotificationsService implements OnModuleInit {
   }
 
   /** Subscribes one template to one event type. */
-  private on<T extends DomainEventType>(
+  private on<T extends UserEventType>(
     type: T,
     template: NotificationTemplate<EventOf<T>>,
     when: (event: EventOf<T>) => boolean = () => true,
   ): void {
     this.events.subscribe(type, async (event) => {
-      if (when(event)) await this.deliver(event.userId, event, template);
+      // UserEventType admits only events that carry a recipient.
+      const { userId } = event as { userId: string };
+      if (when(event)) await this.deliver(userId, event, template);
     });
   }
 

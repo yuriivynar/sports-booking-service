@@ -29,16 +29,22 @@ export class BookingConfirmedTemplate extends NotificationTemplate<EventOf<'book
 export class BookingCancelledTemplate extends NotificationTemplate<EventOf<'booking.cancelled'>> {
   readonly type = 'BOOKING_CANCELLED';
 
-  protected title(): string {
-    return 'Бронювання скасовано';
+  protected title(event: EventOf<'booking.cancelled'>): string {
+    return event.initiator === 'CENTER' ? 'Заняття скасовано центром' : 'Бронювання скасовано';
   }
 
   protected lines(event: EventOf<'booking.cancelled'>): string[] {
     const refund = event.refunded / 100;
+    const byCenter = event.initiator === 'CENTER';
     return [
-      `«${event.title}» — ${formatWhen(event.startsAt)}.`,
+      byCenter
+        ? `На жаль, «${event.title}» — ${formatWhen(event.startsAt)} — не відбудеться.`
+        : `«${event.title}» — ${formatWhen(event.startsAt)}.`,
       ...(event.reason ? [`Причина: ${event.reason}.`] : []),
       ...(refund > 0 ? [`${refund} грн повернуться на вашу картку.`] : []),
+      ...(byCenter
+        ? ['Бонусні бали та відвідування абонемента, якщо ви їх використали, теж повернуто.']
+        : []),
     ];
   }
 
