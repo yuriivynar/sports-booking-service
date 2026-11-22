@@ -15,6 +15,12 @@ describe('BookingLifecycle (State)', () => {
     expect(booking.pay()).toBe('CONFIRMED');
   });
 
+  it('refuses to take payment after the activity started', () => {
+    expect(() => new BookingLifecycle('PENDING', times(-0.1), now).pay()).toThrow(
+      'Заняття вже почалося',
+    );
+  });
+
   it('confirms a free booking without payment', () => {
     expect(new BookingLifecycle('PENDING', times(24), now).confirm()).toBe('CONFIRMED');
   });

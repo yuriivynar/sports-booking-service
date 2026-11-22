@@ -59,7 +59,10 @@ export abstract class BookingState {
 class PendingState extends BookingState {
   readonly status = 'PENDING';
 
-  override pay(): BookingState {
+  override pay(booking: BookingLifecycle): BookingState {
+    if (booking.hasStarted()) {
+      throw new ConflictException('Заняття вже почалося');
+    }
     return STATES.CONFIRMED;
   }
 
