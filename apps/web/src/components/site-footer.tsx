@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/centers', label: 'Центри на карті' },
   { href: '/profile', label: 'Профіль' },
   { href: '/design', label: 'Дизайн-система' },
+  { href: '/privacy', label: 'Конфіденційність' },
 ];
 
 export function SiteFooter() {
