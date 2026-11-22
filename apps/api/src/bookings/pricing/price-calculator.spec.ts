@@ -110,4 +110,17 @@ describe('Price calculator (Decorator)', () => {
     expect(loyaltyOnly.calculate(ctx).total).toBe(34_000);
     expect(promoThenLoyalty.calculate(ctx).total).toBe(30_600);
   });
+
+  it('keeps the membership visit when the Premium card already makes the swim free', () => {
+    const price = calculator.calculate(
+      context({
+        subject: { type: 'GROUP_SESSION', hallKind: 'POOL' },
+        policy: loyaltyPolicyFor('PREMIUM'),
+        membership: { id: 'm1', planName: 'Басейн: 10 відвідувань' },
+      }),
+    );
+
+    expect(price.total).toBe(0);
+    expect(price.lines.map((line) => line.kind)).toEqual(['BASE', 'LOYALTY']);
+  });
 });

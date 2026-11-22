@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { SUPABASE_JWKS } from '../src/auth/supabase-jwt.verifier.js';
 import { addDays, kyivDateString } from '../src/common/time/kyiv-time.js';
+import { BookingFacade } from '../src/bookings/booking.facade.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestSigner } from './test-auth.js';
 
@@ -25,6 +26,7 @@ type Session = { id: string; capacity: number; bookedCount: number; startsAt: Da
 describe('Bookings (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
+  let facade: BookingFacade;
   let signer: Awaited<ReturnType<typeof createTestSigner>>;
   const createdUsers: string[] = [];
   const touchedSessions = new Map<string, number>();
@@ -67,6 +69,7 @@ describe('Bookings (e2e)', () => {
     app = configureApp(moduleRef.createNestApplication());
     await app.init();
     prisma = app.get(PrismaService);
+    facade = app.get(BookingFacade);
 
     const now = Date.now();
     freeSessions = await prisma.groupSession.findMany({
@@ -129,7 +132,8 @@ describe('Bookings (e2e)', () => {
       expect(declined.body.message).toBe('Банк відхилив платіж');
       expect((await user.get(`/api/bookings/${id}`).expect(200)).body.status).toBe('PENDING');
 
-      // Pay: CONFIRMED, points awarded (Standard: 3 per 100 UAH).
+      // Pay: CONFIRMED; points are promised (Standard: 3 per 100 UAH) but
+      // credited only after the activity.
       const paid = await user.post(`/api/bookings/${id}/pay`, GOOD_CARD).expect(200);
       const expectedPoints = Math.floor((quote.body.finalPrice * 3) / 10_000);
       expect(paid.body).toMatchObject({
@@ -139,10 +143,10 @@ describe('Bookings (e2e)', () => {
         allowedActions: ['cancel'],
       });
       const afterPay = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
-      expect(afterPay.bonusBalance).toBe(expectedPoints);
+      expect(afterPay.bonusBalance).toBe(0);
       await user.post(`/api/bookings/${id}/pay`, GOOD_CARD).expect(409);
 
-      // Cancel: seat released, payment refunded, reward taken back.
+      // Cancel: seat released, payment refunded, no reward.
       const cancelled = await user
         .post(`/api/bookings/${id}/cancel`, { reason: 'Змінилися плани' })
         .expect(200);
@@ -304,6 +308,10 @@ describe('Bookings (e2e)', () => {
       expect(slot.available).toBe(false);
     });
 
+    it('answers 400 for a date that does not exist', async () => {
+      await http().get(`/api/halls/${hallId}/availability?date=2026-02-31`).expect(400);
+    });
+
     it('rejects a rental outside opening hours', async () => {
       const user = await newUser();
       const night = new Date(`${date}T01:00:00Z`).toISOString(); // 03:00 in Kyiv
@@ -374,6 +382,95 @@ describe('Bookings (e2e)', () => {
     await user.post(`/api/bookings/${body.id}/cancel`).expect(200);
     const restored = (await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).bonusBalance;
     expect(restored).toBe(5_000);
+  });
+
+  describe('payment and cancellation rules', () => {
+    /** Books a free seat and returns the booking id. */
+    async function pendingBooking(user: Awaited<ReturnType<typeof newUser>>) {
+      const session = takeSession();
+      const { body } = await user
+        .post('/api/bookings', { type: 'GROUP_SESSION', groupSessionId: session.id })
+        .expect(201);
+      return body.id as string;
+    }
+
+    /** Moves a booking in time without touching its session. */
+    const shiftBooking = (id: string, startsInHours: number, data: object = {}) =>
+      prisma.booking.update({
+        where: { id },
+        data: {
+          startsAt: new Date(Date.now() + startsInHours * HOUR),
+          endsAt: new Date(Date.now() + (startsInHours + 1) * HOUR),
+          ...data,
+        },
+      });
+
+    it('credits points only after the activity, so they cannot be farmed', async () => {
+      const user = await newUser();
+      const id = await pendingBooking(user);
+      const paid = await user.post(`/api/bookings/${id}/pay`, GOOD_CARD).expect(200);
+      const balance = async () =>
+        (await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).bonusBalance;
+      expect(await balance()).toBe(0);
+
+      // The activity took place.
+      await shiftBooking(id, -2);
+      await facade.completeFinishedBookings();
+
+      const done = await user.get(`/api/bookings/${id}`).expect(200);
+      expect(done.body).toMatchObject({ status: 'COMPLETED', allowedActions: [] });
+      expect(await balance()).toBe(paid.body.pointsEarned);
+      // A completed booking cannot be cancelled to get the money back as well.
+      await user.post(`/api/bookings/${id}/cancel`).expect(409);
+    });
+
+    it('refuses to cancel a confirmed booking less than 2 hours before the start', async () => {
+      const user = await newUser();
+      const id = await pendingBooking(user);
+      await user.post(`/api/bookings/${id}/pay`, GOOD_CARD).expect(200);
+      await shiftBooking(id, 1);
+
+      const res = await user.post(`/api/bookings/${id}/cancel`).expect(409);
+      expect(res.body.message).toBe('Скасувати можна не пізніше ніж за 2 години до початку');
+    });
+
+    it('refuses payment after the hold expired and releases the seat', async () => {
+      const user = await newUser();
+      const id = await pendingBooking(user);
+      await prisma.booking.update({
+        where: { id },
+        data: { createdAt: new Date(Date.now() - 16 * 60 * 1000) },
+      });
+
+      await user.post(`/api/bookings/${id}/pay`, GOOD_CARD).expect(409);
+      const after = await user.get(`/api/bookings/${id}`).expect(200);
+      expect(after.body.status).toBe('CANCELLED');
+      expect(await prisma.payment.count({ where: { bookingId: id } })).toBe(0);
+    });
+
+    it('takes the money once when the same booking is paid twice at once', async () => {
+      const user = await newUser();
+      const id = await pendingBooking(user);
+
+      const results = await Promise.all([
+        user.post(`/api/bookings/${id}/pay`, GOOD_CARD),
+        user.post(`/api/bookings/${id}/pay`, GOOD_CARD),
+      ]);
+
+      expect(results.map((res) => res.status).sort((a, b) => a - b)).toEqual([200, 409]);
+      const payments = await prisma.payment.findMany({ where: { bookingId: id } });
+      // The loser either stopped before charging or was refunded at once.
+      expect(payments.filter((p) => p.status === 'SUCCEEDED')).toHaveLength(1);
+      expect(payments.every((p) => p.status === 'SUCCEEDED' || p.status === 'REFUNDED')).toBe(true);
+    });
+
+    it('does not let a stranger pay for someone else’s booking', async () => {
+      const owner = await newUser();
+      const stranger = await newUser();
+      const id = await pendingBooking(owner);
+
+      await stranger.post(`/api/bookings/${id}/pay`, GOOD_CARD).expect(404);
+    });
   });
 
   it('validates the request body', async () => {

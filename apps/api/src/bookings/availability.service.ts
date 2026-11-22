@@ -41,6 +41,11 @@ export class AvailabilityService {
     hours: { openHour: number; closeHour: number },
     pricePerHour: number,
   ): Promise<AvailabilityDto> {
+    // The regex in the DTO lets 2026-02-31 through: check the date exists.
+    const parsed = new Date(`${date}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+      throw new BadRequestException('Такої дати не існує');
+    }
     const now = new Date();
     const today = kyivDateString(now);
     if (date < today || date > addDays(today, BOOKING_HORIZON_DAYS)) {

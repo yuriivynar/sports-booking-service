@@ -12,6 +12,7 @@ interface BookingEventBase {
 export type DomainEvent =
   | ({ type: 'booking.created'; finalPrice: number } & BookingEventBase)
   | ({ type: 'booking.confirmed'; pointsEarned: number } & BookingEventBase)
+  | ({ type: 'booking.completed'; pointsEarned: number } & BookingEventBase)
   | ({ type: 'booking.cancelled'; refunded: number; reason: string | null } & BookingEventBase)
   | ({ type: 'payment.failed'; reason: string } & BookingEventBase);
 

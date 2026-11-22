@@ -6,6 +6,7 @@ import { BookingValidator, type ValidationContext } from './booking-validator.js
 /** How far ahead bookings are accepted. */
 export const BOOKING_HORIZON_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
 
 const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED'] as const;
 
@@ -33,7 +34,9 @@ export class OpeningHoursValidator extends BookingValidator {
     // Midnight after the last hour counts as 24:00 of the same day.
     const endHour = end.date === start.date ? end.hour : end.hour === 0 ? 24 : Infinity;
 
-    if (start.minute !== 0 || end.minute !== 0) {
+    // Kyiv is a whole number of hours from UTC, so "on the hour" is the
+    // same check in both; it also rejects stray seconds and milliseconds.
+    if (draft.startsAt.getTime() % HOUR_MS !== 0 || draft.endsAt.getTime() % HOUR_MS !== 0) {
       throw new BadRequestException('Бронювання починається на початку години');
     }
     if (start.hour < openHour || endHour > closeHour) {

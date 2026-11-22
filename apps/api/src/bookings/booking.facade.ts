@@ -1,14 +1,16 @@
 import {
+  BadGatewayException,
   ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PG_UNIQUE_VIOLATION, postgresErrorCode } from '../common/database-errors.js';
 import type { EventOf } from '../events/domain-events.js';
 import { EventBus } from '../events/event-bus.js';
-import type { BonusReason } from '../generated/prisma/client.js';
+import type { BonusReason, BookingStatus } from '../generated/prisma/client.js';
 import { loyaltyPolicyFor } from '../loyalty/loyalty-policy.js';
 import { PaymentGateway, type CardDetails } from '../payments/payment-gateway.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -28,19 +30,25 @@ import { PricingService } from './pricing/pricing.service.js';
 import { BookingLifecycle } from './state/booking-state.js';
 import { BookingValidationChain } from './validation/booking-validation.chain.js';
 
-const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED'] as const;
 const HOLD_EXPIRED_REASON = 'Час на оплату минув';
+/** How many rows one maintenance sweep handles; the next request or job takes the rest. */
+const SWEEP_BATCH = 20;
 
 type EventBase = Omit<EventOf<'booking.created'>, 'type' | 'finalPrice'>;
 
+/** Who cancels: the user is bound by the state rules, the system only releases unpaid holds. */
+type Canceller = { kind: 'user' } | { kind: 'hold-expiry' };
+
 /**
- * Facade over the booking subsystem. Controllers call four methods; behind
+ * Facade over the booking subsystem. Controllers call a few methods; behind
  * them the facade coordinates the creators (Factory Method), validators
  * (Chain of Responsibility), pricing (Decorator + Strategy), the payment
  * gateway (Adapter), the booking states (State) and the event bus.
  */
 @Injectable()
 export class BookingFacade {
+  private readonly logger = new Logger(BookingFacade.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly creators: BookingCreators,
@@ -52,7 +60,10 @@ export class BookingFacade {
 
   /** Checks a request and prices it without saving anything. */
   async quote(userId: string, request: BookingRequest): Promise<BookingQuoteDto> {
-    const { draft, quote } = await this.prepare(userId, request, new Date());
+    const now = new Date();
+    // A seat held by an unpaid booking that has expired must not block the quote.
+    await this.releaseExpiredHolds(now);
+    const { draft, quote } = await this.prepare(userId, request, now);
     return {
       type: draft.type,
       title: draft.title,
@@ -76,7 +87,10 @@ export class BookingFacade {
   async book(userId: string, request: BookingRequest): Promise<BookingDto> {
     const now = new Date();
     await this.releaseExpiredHolds(now);
-    const { draft, quote, membership } = await this.prepare(userId, request, now);
+    const { draft, quote, membership: chosen } = await this.prepare(userId, request, now);
+    // A membership is used only if pricing applied it (a free Premium pool
+    // session, for example, keeps the visit).
+    const membership = quote.lines.some((line) => line.kind === 'MEMBERSHIP') ? chosen : null;
 
     const lifecycle = new BookingLifecycle('PENDING', draft, now);
     const isFree = quote.finalPrice === 0;
@@ -113,16 +127,22 @@ export class BookingFacade {
       startsAt: draft.startsAt,
     };
     await this.events.publish({ type: 'booking.created', finalPrice: quote.finalPrice, ...base });
-    if (isFree) await this.events.publish({ type: 'booking.confirmed', pointsEarned: 0, ...base });
+    if (isFree) {
+      await this.events.publish({
+        type: 'booking.confirmed',
+        pointsEarned: booking.pointsEarned,
+        ...base,
+      });
+    }
     return this.findOne(userId, booking.id);
   }
 
-  /** pay → confirm → award points. A declined card keeps the booking pending. */
+  /** pay → confirm. A declined card keeps the booking pending; points come after the activity. */
   async pay(userId: string, bookingId: string, card: CardDetails): Promise<BookingDto> {
     const now = new Date();
     const booking = await this.findOwned(userId, bookingId);
     if (holdExpired(booking, now)) {
-      await this.cancelReservation(booking, HOLD_EXPIRED_REASON, now);
+      await this.cancelReservation(booking, HOLD_EXPIRED_REASON, now, { kind: 'hold-expiry' });
       throw new ConflictException('Час на оплату минув. Забронюйте ще раз');
     }
     const lifecycle = new BookingLifecycle(booking.status, booking, now);
@@ -133,17 +153,21 @@ export class BookingFacade {
     });
     // The gateway is called outside any transaction: no row stays locked
     // while the bank answers.
-    const result = await this.payments.charge({
-      amount: booking.finalPrice,
-      card,
-      reference: payment.id,
-      description: bookingTitle(booking),
-    });
-    if (!result.ok) {
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: 'FAILED', failureReason: result.reason },
+    let result;
+    try {
+      result = await this.payments.charge({
+        amount: booking.finalPrice,
+        card,
+        reference: payment.id,
+        description: bookingTitle(booking),
       });
+    } catch (error) {
+      this.logger.error(`Payment ${payment.id}: the gateway failed`, error);
+      await this.markPayment(payment.id, 'FAILED', 'Платіжний сервіс недоступний');
+      throw new BadGatewayException('Платіжний сервіс недоступний. Спробуйте ще раз');
+    }
+    if (!result.ok) {
+      await this.markPayment(payment.id, 'FAILED', result.reason);
       await this.events.publish({
         type: 'payment.failed',
         reason: result.reason,
@@ -159,6 +183,7 @@ export class BookingFacade {
     const pointsEarned = loyaltyPolicyFor(loyaltyTier).pointsFor(booking.finalPrice);
     try {
       await this.prisma.$transaction(async (tx) => {
+        // Conditional: a parallel pay or cancel that got here first wins.
         const { count } = await tx.booking.updateMany({
           where: { id: bookingId, status: 'PENDING' },
           data: { status: lifecycle.status, confirmedAt: now, pointsEarned },
@@ -168,17 +193,11 @@ export class BookingFacade {
           where: { id: payment.id },
           data: { status: 'SUCCEEDED', providerRef: result.providerRef },
         });
-        if (pointsEarned > 0) {
-          await this.changePoints(tx, userId, bookingId, pointsEarned, 'BOOKING_REWARD');
-        }
       });
     } catch (error) {
       // The money is taken but the booking cannot be confirmed: give it back.
-      await this.payments.refund(result.providerRef, booking.finalPrice);
-      await this.prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: 'REFUNDED', providerRef: result.providerRef },
-      });
+      // A failing refund is logged; the original error still reaches the user.
+      await this.refundPayment(payment.id, result.providerRef, booking.finalPrice);
       throw error;
     }
 
@@ -186,17 +205,19 @@ export class BookingFacade {
     return this.findOne(userId, bookingId);
   }
 
-  /** cancel → release the place → return money, points and the membership visit. */
+  /** cancel → release the place → return money, redeemed points and the membership visit. */
   async cancel(userId: string, bookingId: string, reason?: string): Promise<BookingDto> {
     const now = new Date();
     const booking = await this.findOwned(userId, bookingId);
+    // Early, friendly answer; the transaction checks again on a locked row.
     new BookingLifecycle(booking.status, booking, now).cancel();
-    await this.cancelReservation(booking, reason ?? null, now);
+    await this.cancelReservation(booking, reason ?? null, now, { kind: 'user' });
     return this.findOne(userId, bookingId);
   }
 
   async listMine(userId: string): Promise<BookingDto[]> {
     const now = new Date();
+    await this.releaseExpiredHolds(now);
     const rows = await this.prisma.booking.findMany({
       where: { userId },
       orderBy: { startsAt: 'desc' },
@@ -210,27 +231,83 @@ export class BookingFacade {
     return toBookingDto(await this.findOwned(userId, bookingId));
   }
 
+  /** The booking page: shows a run-out hold as cancelled, not as still payable. */
+  async view(userId: string, bookingId: string): Promise<BookingDto> {
+    await this.releaseExpiredHolds();
+    return this.findOne(userId, bookingId);
+  }
+
   /**
    * Cancels unpaid bookings whose hold has run out, so their places are
-   * free again. Runs before each new booking; the scheduled job calls it too.
+   * free again. Runs before each quote and booking, and from the
+   * scheduled maintenance job.
    */
   async releaseExpiredHolds(now: Date = new Date()): Promise<number> {
     const stale = await this.prisma.booking.findMany({
       where: { status: 'PENDING', createdAt: { lte: new Date(now.getTime() - HOLD_MS) } },
       include: BOOKING_INCLUDE,
-      take: 20,
+      take: SWEEP_BATCH,
     });
     let released = 0;
     for (const booking of stale) {
       try {
-        await this.cancelReservation(booking, HOLD_EXPIRED_REASON, now);
+        await this.cancelReservation(booking, HOLD_EXPIRED_REASON, now, { kind: 'hold-expiry' });
         released++;
       } catch (error) {
-        // Another request released it first.
-        if (!(error instanceof ConflictException)) throw error;
+        // Another request released it first, or this row has a problem:
+        // either way one bad row must not block everybody's bookings.
+        if (!(error instanceof ConflictException)) {
+          this.logger.error(`Could not release hold ${booking.id}`, error);
+        }
       }
     }
     return released;
+  }
+
+  /**
+   * Marks confirmed bookings that have ended as COMPLETED and credits their
+   * bonus points. Points come only now: a completed booking can no longer
+   * be cancelled, so a reward is never handed out and then taken back.
+   */
+  async completeFinishedBookings(now: Date = new Date()): Promise<number> {
+    const finished = await this.prisma.booking.findMany({
+      where: { status: 'CONFIRMED', endsAt: { lte: now } },
+      include: BOOKING_INCLUDE,
+      take: SWEEP_BATCH,
+    });
+    let completed = 0;
+    for (const booking of finished) {
+      const status = new BookingLifecycle(booking.status, booking, now).complete();
+      try {
+        const done = await this.prisma.$transaction(async (tx) => {
+          const { count } = await tx.booking.updateMany({
+            where: { id: booking.id, status: 'CONFIRMED' },
+            data: { status },
+          });
+          if (count === 0) return false;
+          if (booking.pointsEarned > 0) {
+            await this.changePoints(
+              tx,
+              booking.userId,
+              booking.id,
+              booking.pointsEarned,
+              'BOOKING_REWARD',
+            );
+          }
+          return true;
+        });
+        if (!done) continue;
+        completed++;
+        await this.events.publish({
+          type: 'booking.completed',
+          pointsEarned: booking.pointsEarned,
+          ...eventBase(booking),
+        });
+      } catch (error) {
+        this.logger.error(`Could not complete booking ${booking.id}`, error);
+      }
+    }
+    return completed;
   }
 
   private async prepare(userId: string, request: BookingRequest, now: Date) {
@@ -280,15 +357,25 @@ export class BookingFacade {
     booking: BookingRow,
     reason: string | null,
     now: Date,
+    by: Canceller,
   ): Promise<void> {
     const { id, userId } = booking;
     await this.inTransaction(async (tx) => {
-      const { count } = await tx.booking.updateMany({
-        where: { id, status: { in: [...ACTIVE_STATUSES] } },
+      // Lock the row and decide on its current status: a payment that
+      // committed a moment ago turns PENDING into CONFIRMED, whose rules
+      // (the 2-hour deadline) then apply.
+      const [locked] = await tx.$queryRaw<{ status: BookingStatus }[]>`
+        SELECT status FROM bookings WHERE id = ${id}::uuid FOR UPDATE`;
+      if (!locked) throw new NotFoundException('Бронювання не знайдено');
+      if (by.kind === 'hold-expiry' && locked.status !== 'PENDING') {
+        throw new ConflictException('Бронювання вже оплачено або скасовано');
+      }
+      new BookingLifecycle(locked.status, booking, now).cancel();
+
+      await tx.booking.update({
+        where: { id },
         data: { status: 'CANCELLED', cancelledAt: now, cancelReason: reason },
       });
-      if (count === 0) throw new ConflictException('Бронювання вже скасовано');
-
       await this.creators.for(booking.type).release(tx, booking);
       if (booking.membershipId) {
         await tx.membership.updateMany({
@@ -299,15 +386,6 @@ export class BookingFacade {
       if (booking.pointsRedeemed > 0) {
         await this.changePoints(tx, userId, id, booking.pointsRedeemed, 'REFUND');
       }
-      if (booking.pointsEarned > 0) {
-        // Take back the reward, but never more than the user still has.
-        const { bonusBalance } = await tx.user.findUniqueOrThrow({
-          where: { id: userId },
-          select: { bonusBalance: true },
-        });
-        const clawback = Math.min(booking.pointsEarned, bonusBalance);
-        if (clawback > 0) await this.changePoints(tx, userId, id, -clawback, 'ADJUSTMENT');
-      }
     });
 
     let refunded = 0;
@@ -315,15 +393,46 @@ export class BookingFacade {
       where: { bookingId: id, status: 'SUCCEEDED' },
     });
     for (const payment of payments) {
-      await this.payments.refund(payment.providerRef!, payment.amount);
-      await this.prisma.payment.update({ where: { id: payment.id }, data: { status: 'REFUNDED' } });
-      refunded += payment.amount;
+      if (await this.refundPayment(payment.id, payment.providerRef!, payment.amount)) {
+        refunded += payment.amount;
+      }
     }
     await this.events.publish({
       type: 'booking.cancelled',
       refunded,
       reason,
       ...eventBase(booking),
+    });
+  }
+
+  /**
+   * Returns the money for one payment. A failure is logged and the payment
+   * stays SUCCEEDED, so an administrator can see and retry it.
+   */
+  private async refundPayment(paymentId: string, providerRef: string, amount: number) {
+    try {
+      await this.payments.refund(providerRef, amount);
+      await this.prisma.payment.update({
+        where: { id: paymentId },
+        data: { status: 'REFUNDED', providerRef },
+      });
+      return true;
+    } catch (error) {
+      this.logger.error(`Refund of payment ${paymentId} failed`, error);
+      await this.prisma.payment
+        .update({
+          where: { id: paymentId },
+          data: { providerRef, failureReason: 'Повернення не вдалося, потрібне втручання' },
+        })
+        .catch(() => undefined);
+      return false;
+    }
+  }
+
+  private markPayment(paymentId: string, status: 'FAILED', reason: string) {
+    return this.prisma.payment.update({
+      where: { id: paymentId },
+      data: { status, failureReason: reason },
     });
   }
 
@@ -368,10 +477,10 @@ export class BookingFacade {
 }
 
 const BONUS_NOTES: Record<BonusReason, string> = {
-  BOOKING_REWARD: 'Нарахування за бронювання',
+  BOOKING_REWARD: 'Нарахування за відвідане заняття',
   REDEMPTION: 'Оплата бронювання балами',
   REFUND: 'Повернення балів за скасоване бронювання',
-  ADJUSTMENT: 'Списання балів за скасоване бронювання',
+  ADJUSTMENT: 'Коригування балів',
 };
 
 function eventBase(booking: BookingRow): EventBase {

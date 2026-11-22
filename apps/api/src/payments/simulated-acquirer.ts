@@ -54,7 +54,7 @@ export class SimulatedAcquirer {
 
   private declineCode({ pan, exp, cvv }: AuthorizePayload): DeclineCode | null {
     if (!/^\d{16}$/.test(pan) || !passesLuhn(pan)) return 'invalid_number';
-    if (!/^\d{3}$/.test(cvv)) return 'invalid_cvv';
+    if (!/^\d{3,4}$/.test(cvv)) return 'invalid_cvv';
     if (this.isExpired(exp)) return 'expired_card';
     if (pan === TEST_CARDS.declined) return 'card_declined';
     if (pan === TEST_CARDS.insufficientFunds) return 'insufficient_funds';

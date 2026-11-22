@@ -13,8 +13,11 @@ export const metadata: Metadata = { title: 'Мої бронювання' };
 /** Splits bookings into what is still ahead (soonest first) and the history. */
 function splitByTime(bookings: Booking[]) {
   const now = Date.now();
+  // An unpaid booking whose hold ran out is history even before the server releases it.
+  const holdLost = (b: Booking) => !!b.payBefore && new Date(b.payBefore).getTime() <= now;
   const ahead = (b: Booking) =>
-    (b.status === 'PENDING' || b.status === 'CONFIRMED') && new Date(b.endsAt).getTime() > now;
+    (b.status === 'CONFIRMED' || (b.status === 'PENDING' && !holdLost(b))) &&
+    new Date(b.endsAt).getTime() > now;
   // The API returns newest first; upcoming ones read better soonest first.
   return {
     upcoming: bookings.filter(ahead).reverse(),

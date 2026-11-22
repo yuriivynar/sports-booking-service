@@ -15,6 +15,8 @@ interface Props {
   lines: PriceLine[];
   finalPrice: number;
   pointsEarned: number;
+  /** True once the activity took place and the points are on the balance. */
+  pointsCredited?: boolean;
   className?: string;
 }
 
@@ -22,7 +24,13 @@ interface Props {
  * The price as the server's decorators built it: the base price first,
  * then one line per rule that changed it.
  */
-export function PriceBreakdown({ lines, finalPrice, pointsEarned, className }: Props) {
+export function PriceBreakdown({
+  lines,
+  finalPrice,
+  pointsEarned,
+  pointsCredited = false,
+  className,
+}: Props) {
   return (
     <div className={cn('space-y-3', className)}>
       <ul className="space-y-2 text-sm">
@@ -56,7 +64,8 @@ export function PriceBreakdown({ lines, finalPrice, pointsEarned, className }: P
       {pointsEarned > 0 && (
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Coins className="size-3.5 text-ink" aria-hidden />
-          Після оплати отримаєте {pluralize(pointsEarned, ['бал', 'бали', 'балів'])}
+          {pointsCredited ? 'Нараховано' : 'Після заняття отримаєте'}{' '}
+          {pluralize(pointsEarned, ['бал', 'бали', 'балів'])}
         </p>
       )}
     </div>

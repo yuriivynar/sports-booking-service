@@ -73,10 +73,15 @@ export function CheckoutPanel({ request, bonusBalance }: Props) {
   async function book() {
     if (!body) return;
     setSubmitting(true);
-    const { data, error } = await (await browserApi()).POST('/api/bookings', { body });
+    const result = await browserApi()
+      .then((api) => api.POST('/api/bookings', { body }))
+      .catch(() => null);
+    const data = result?.data;
     if (!data) {
       setSubmitting(false);
-      toast.error(apiErrorMessage(error, 'Не вдалося забронювати'));
+      toast.error(
+        result ? apiErrorMessage(result.error, 'Не вдалося забронювати') : 'API недоступний',
+      );
       return;
     }
     // Free bookings are confirmed at once; others go to the payment form.

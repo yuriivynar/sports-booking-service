@@ -88,7 +88,8 @@ export default async function BookingPage({ params, searchParams }: PageProps<'/
             <PriceBreakdown
               lines={booking.priceBreakdown}
               finalPrice={booking.finalPrice}
-              pointsEarned={booking.status === 'PENDING' ? 0 : booking.pointsEarned}
+              pointsEarned={booking.status === 'CANCELLED' ? 0 : booking.pointsEarned}
+              pointsCredited={booking.status === 'COMPLETED'}
             />
           </div>
           {booking.allowedActions.includes('cancel') && (
