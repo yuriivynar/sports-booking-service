@@ -20,8 +20,19 @@ import { NotificationsService } from './notifications.service.js';
         const host = config.get<string>('SMTP_HOST', 'localhost');
         const port = Number(config.get<string>('SMTP_PORT', '1025'));
         new Logger('NotificationsModule').log(`Sending email through ${host}:${port}`);
+        const user = config.get<string>('SMTP_USER');
         return new SmtpEmailAdapter(
-          createTransport({ host, port, secure: port === 465 }),
+          createTransport({
+            host,
+            port,
+            secure: port === 465,
+            ...(user && { auth: { user, pass: config.get<string>('SMTP_PASS') } }),
+            // Emails are sent while a request or the job waits: fail fast
+            // instead of nodemailer's default of minutes.
+            connectionTimeout: 5_000,
+            greetingTimeout: 5_000,
+            socketTimeout: 10_000,
+          }),
           config.get<string>('EMAIL_FROM', 'SportHub <no-reply@sporthub.local>'),
         );
       },

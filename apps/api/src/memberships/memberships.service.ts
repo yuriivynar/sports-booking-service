@@ -43,15 +43,31 @@ export class MembershipsService {
     return this.prisma.membership.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
       include: MEMBERSHIP_INCLUDE,
     });
   }
 
-  /** Creates an unpaid membership with the terms its kind defines (Factory Method). */
+  /**
+   * Creates an unpaid membership with the terms its kind defines (Factory
+   * Method). Buying the same plan again reuses the unpaid one, so repeated
+   * clicks do not pile up rows.
+   */
   async purchase(userId: string, planId: string, request: PurchaseRequest): Promise<MembershipDto> {
     const plan = await this.prisma.membershipPlan.findUnique({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Тариф не знайдено');
     const terms = this.issuers.for(plan.kind).issue(plan, request);
+    const unpaid = await this.prisma.membership.findFirst({
+      where: { userId, planId, status: 'PENDING' },
+      select: { id: true },
+    });
+    if (unpaid) {
+      return this.prisma.membership.update({
+        where: { id: unpaid.id },
+        data: { visitsLeft: terms.visits, companyName: terms.companyName },
+        include: MEMBERSHIP_INCLUDE,
+      });
+    }
     return this.prisma.membership.create({
       data: {
         userId,
@@ -64,7 +80,10 @@ export class MembershipsService {
     });
   }
 
-  /** Charges the plan's price and activates the membership from this moment. */
+  /**
+   * Charges the plan's price at the moment of payment (the page shows the
+   * same current price) and activates the membership from this moment.
+   */
   async pay(userId: string, membershipId: string, card: CardDetails): Promise<MembershipDto> {
     const membership = await this.prisma.membership.findFirst({
       where: { id: membershipId, userId },
@@ -114,8 +133,9 @@ export class MembershipsService {
           data: { status: 'SUCCEEDED', providerRef: result.providerRef },
         });
         if (membership.companyName) {
-          await tx.user.update({
-            where: { id: userId },
+          // Fill the profile's company only if the user has not set one.
+          await tx.user.updateMany({
+            where: { id: userId, companyName: null },
             data: { companyName: membership.companyName },
           });
         }
@@ -127,8 +147,20 @@ export class MembershipsService {
             where: { id: payment.id },
             data: { status: 'REFUNDED', providerRef: result.providerRef },
           }),
-        (refundError: unknown) =>
-          this.logger.error(`Refund of payment ${payment.id} failed`, refundError),
+        async (refundError: unknown) => {
+          this.logger.error(`Refund of payment ${payment.id} failed`, refundError);
+          // Visible to an administrator: the money is held and needs a manual refund.
+          await this.prisma.payment
+            .update({
+              where: { id: payment.id },
+              data: {
+                status: 'SUCCEEDED',
+                providerRef: result.providerRef,
+                failureReason: 'Повернення не вдалося, потрібне втручання',
+              },
+            })
+            .catch(() => undefined);
+        },
       );
       throw error;
     }

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 const STATUS_TONES: Record<Membership['status'], string> = {
   PENDING: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
-  ACTIVE: 'bg-success/15 text-success',
+  ACTIVE: 'bg-success/15 text-success-ink',
   EXPIRED: 'bg-muted text-muted-foreground',
   CANCELLED: 'bg-muted text-muted-foreground',
 };

@@ -70,4 +70,13 @@ describe('Membership issuers (Factory Method)', () => {
       endsAt: null,
     });
   });
+
+  it('counts calendar days in Kyiv across the switch to winter time', () => {
+    // Paid at 12:00 Kyiv summer time (UTC+3); 30 days later is winter time (UTC+2).
+    const terms = issuers.for('MONTHLY').issue(plan({}), {});
+
+    expect(terms.period(new Date('2026-10-01T09:00:00Z')).endsAt?.toISOString()).toBe(
+      '2026-10-31T10:00:00.000Z',
+    );
+  });
 });

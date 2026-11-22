@@ -51,7 +51,8 @@ export class ReminderTemplate extends NotificationTemplate<EventOf<'booking.remi
   readonly type = 'REMINDER';
 
   protected title(event: EventOf<'booking.reminder'>): string {
-    return event.hoursBefore === 24 ? 'Заняття завтра' : 'Заняття через 2 години';
+    // "About a day" rather than "tomorrow": 23 hours before 23:30 is still today.
+    return event.hoursBefore === 24 ? 'Заняття через добу' : 'Заняття вже скоро';
   }
 
   protected lines(event: EventOf<'booking.reminder'>): string[] {

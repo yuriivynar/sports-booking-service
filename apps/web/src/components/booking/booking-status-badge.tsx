@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 const TONES: Record<BookingStatus, string> = {
   PENDING: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
-  CONFIRMED: 'bg-success/15 text-success',
+  CONFIRMED: 'bg-success/15 text-success-ink',
   CANCELLED: 'bg-muted text-muted-foreground',
   COMPLETED: 'bg-electric/15 text-electric',
 };

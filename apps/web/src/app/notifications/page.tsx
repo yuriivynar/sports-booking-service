@@ -1,8 +1,8 @@
 import { Bell, CalendarCheck, CalendarX, Coins, Sparkles, Ticket } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { PageHeader } from '@/components/layout/page-header';
+import { NotificationLink } from '@/components/notifications/notification-link';
 import { ReadAllButton } from '@/components/notifications/read-all-button';
 import type { NotificationItem } from '@/lib/api';
 import { requireBooker } from '@/lib/booking-session';
@@ -52,7 +52,10 @@ export default async function NotificationsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 font-semibold">
                     {!item.readAt && (
-                      <span aria-label="нове" className="size-2 rounded-full bg-primary" />
+                      <>
+                        <span aria-hidden className="size-2 rounded-full bg-primary" />
+                        <span className="sr-only">Нове: </span>
+                      </>
                     )}
                     {item.title}
                   </p>
@@ -68,9 +71,15 @@ export default async function NotificationsPage() {
               !item.readAt && 'border-primary/40',
             );
             return item.link ? (
-              <Link key={item.id} href={item.link} className={cn(className, 'card-lift')}>
+              <NotificationLink
+                key={item.id}
+                id={item.id}
+                href={item.link}
+                unread={!item.readAt}
+                className={cn(className, 'card-lift')}
+              >
                 {content}
-              </Link>
+              </NotificationLink>
             ) : (
               <div key={item.id} className={className}>
                 {content}

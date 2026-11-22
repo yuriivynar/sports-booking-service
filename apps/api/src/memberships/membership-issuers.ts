@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { addDays, kyivClock, kyivTime } from '../common/time/kyiv-time.js';
 import type { MembershipKind, MembershipPlan } from '../generated/prisma/client.js';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface PurchaseRequest {
   /** Required for a corporate membership. */
@@ -26,10 +25,19 @@ export abstract class MembershipTerms {
     return null;
   }
 
-  /** Validity period counted from the moment of payment. */
+  /**
+   * Validity period counted from the moment of payment, in calendar days
+   * of Kyiv: paid at 10:00, it ends at 10:00 on the last day even across
+   * a daylight saving change.
+   */
   period(paidAt: Date): { startsAt: Date; endsAt: Date | null } {
     const days = this.plan.durationDays;
-    return { startsAt: paidAt, endsAt: days ? new Date(paidAt.getTime() + days * DAY_MS) : null };
+    if (!days) return { startsAt: paidAt, endsAt: null };
+    const { date, hour, minute } = kyivClock(paidAt);
+    // Seconds and milliseconds carry over, so the period is exact to the millisecond.
+    const endsAt =
+      kyivTime(addDays(date, days), hour, minute).getTime() + (paidAt.getTime() % 60_000);
+    return { startsAt: paidAt, endsAt: new Date(endsAt) };
   }
 }
 

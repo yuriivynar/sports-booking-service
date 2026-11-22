@@ -44,7 +44,7 @@ describe('Notification templates (Template Method)', () => {
       web,
     );
 
-    expect(reminder.title).toBe('Заняття через 2 години');
+    expect(reminder.title).toBe('Заняття вже скоро');
     expect(reminder.email.text.startsWith('Вітаємо!')).toBe(true);
   });
 

@@ -67,7 +67,7 @@ export default async function MembershipPage({ params }: PageProps<'/memberships
             <h1 className="text-3xl font-black sm:text-4xl">{plan.name}</h1>
             <p className="text-muted-foreground">{plan.description}</p>
             {membership.status === 'ACTIVE' && (
-              <p className="flex items-center gap-2 font-medium text-success">
+              <p className="flex items-center gap-2 font-medium text-success-ink">
                 <CheckCircle2 className="size-5" aria-hidden /> Обирайте його під час запису на
                 заняття
               </p>
