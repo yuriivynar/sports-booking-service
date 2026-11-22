@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dateKey, formatPrice, formatTimeRange, pluralize } from './format';
+import { dateKey, formatPrice, formatTimeRange, pluralize, upperFirst } from './format';
 
 describe('format', () => {
   it('formats kopecks as hryvnias', () => {
@@ -22,5 +22,10 @@ describe('format', () => {
     expect(pluralize(3, seats)).toBe('3 місця');
     expect(pluralize(5, seats)).toBe('5 місць');
     expect(pluralize(21, seats)).toBe('21 місце');
+  });
+
+  it('raises only the first letter of a date', () => {
+    expect(upperFirst('пт, 27 листопада')).toBe('Пт, 27 листопада');
+    expect(upperFirst('')).toBe('');
   });
 });
