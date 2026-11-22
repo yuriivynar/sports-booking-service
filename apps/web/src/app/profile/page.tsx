@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { PageHeader } from '@/components/layout/page-header';
+import { AvatarUploader } from '@/components/profile/avatar-uploader';
 import { LoyaltyCard } from '@/components/profile/loyalty-card';
 import { apiClient } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
@@ -31,7 +32,8 @@ export default async function ProfilePage() {
           <ApiUnavailable />
         ) : (
           <div className="grid gap-8 lg:grid-cols-[380px_1fr]">
-            <aside className="space-y-4">
+            <aside className="space-y-6">
+              <AvatarUploader profile={profile} />
               <LoyaltyCard profile={profile} />
               <p className="text-sm text-muted-foreground">
                 1 бал = 1 гривня знижки на наступне бронювання.
