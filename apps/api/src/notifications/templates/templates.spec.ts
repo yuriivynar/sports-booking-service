@@ -54,11 +54,30 @@ describe('Notification templates (Template Method)', () => {
       type: 'booking.cancelled',
       refunded,
       reason: null,
+      initiator: 'USER',
       ...base,
     });
 
     expect(template.render(event(25_000), { fullName: null }, web).body).toContain('250 грн');
     expect(template.render(event(0), { fullName: null }, web).body).not.toContain('грн');
+  });
+
+  it('says so when the center called the session off', () => {
+    const rendered = new BookingCancelledTemplate().render(
+      {
+        type: 'booking.cancelled',
+        refunded: 25_000,
+        reason: 'Тренер захворів',
+        initiator: 'CENTER',
+        ...base,
+      },
+      { fullName: null },
+      web,
+    );
+
+    expect(rendered.title).toBe('Заняття скасовано центром');
+    expect(rendered.body).toContain('Причина: Тренер захворів.');
+    expect(rendered.body).toContain('бали та відвідування абонемента');
   });
 
   it('escapes names and titles in the HTML email', () => {

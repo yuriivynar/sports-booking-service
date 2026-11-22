@@ -39,8 +39,13 @@ const SWEEP_BUDGET_MS = 10_000;
 
 type EventBase = Omit<EventOf<'booking.created'>, 'type' | 'finalPrice'>;
 
-/** Who cancels: the user is bound by the state rules, the system only releases unpaid holds. */
-type Canceller = { kind: 'user' } | { kind: 'hold-expiry' };
+/**
+ * Who cancels. The user is bound by the 2-hour deadline, the system only
+ * releases unpaid holds, the center may call a session off until it starts.
+ */
+type Canceller = { kind: 'user' } | { kind: 'hold-expiry' } | { kind: 'center' };
+
+const INITIATORS = { user: 'USER', 'hold-expiry': 'SYSTEM', center: 'CENTER' } as const;
 
 /**
  * Facade over the booking subsystem. Controllers call a few methods; behind
@@ -215,6 +220,40 @@ export class BookingFacade {
     new BookingLifecycle(booking.status, booking, now).cancel();
     await this.cancelReservation(booking, reason ?? null, now, { kind: 'user' });
     return this.findOne(userId, bookingId);
+  }
+
+  /**
+   * The center called a group session off: every booking still active in
+   * it is cancelled with everything returned (money, points, membership
+   * visit). Bookings that fail are logged and stay active, so running this
+   * again finishes the job. Returns how many were cancelled.
+   */
+  async cancelSessionBookings(sessionId: string, reason: string, now = new Date()) {
+    return this.sweep(
+      (skip) =>
+        this.prisma.booking.findMany({
+          where: {
+            groupSessionId: sessionId,
+            status: { in: ['PENDING', 'CONFIRMED'] },
+            id: { notIn: skip },
+          },
+          include: BOOKING_INCLUDE,
+          orderBy: { createdAt: 'asc' },
+          take: SWEEP_BATCH,
+        }),
+      async (booking) => {
+        try {
+          await this.cancelReservation(booking, reason, now, { kind: 'center' });
+          return true;
+        } catch (error) {
+          // The user cancelled it a moment earlier: nothing left to do.
+          if (error instanceof ConflictException) return false;
+          throw error;
+        }
+      },
+      true,
+      'cancel the session booking',
+    );
   }
 
   async listMine(userId: string): Promise<BookingDto[]> {
@@ -409,7 +448,9 @@ export class BookingFacade {
       if (by.kind === 'hold-expiry' && locked.status !== 'PENDING') {
         throw new ConflictException('Бронювання вже оплачено або скасовано');
       }
-      new BookingLifecycle(locked.status, booking, now).cancel();
+      const lifecycle = new BookingLifecycle(locked.status, booking, now);
+      if (by.kind === 'center') lifecycle.cancelByCenter();
+      else lifecycle.cancel();
 
       await tx.booking.update({
         where: { id },
@@ -440,6 +481,7 @@ export class BookingFacade {
       type: 'booking.cancelled',
       refunded,
       reason,
+      initiator: INITIATORS[by.kind],
       ...eventBase(booking),
     });
   }
