@@ -98,6 +98,14 @@
 | Документація API (Swagger)  | http://localhost:4000/api/docs   |
 | Mailpit (перехоплені листи) | http://localhost:8025            |
 
+## Дизайн
+
+- **Дизайн-система** на токенах (кольори за ролями, шрифти, радіуси, тіні, анімації) у `apps/web/src/app/globals.css`; жива документація — сторінка `/design`.
+- Світла й темна теми, шрифти Unbounded (заголовки) і Geist (текст), власний логотип.
+- Доступність: контраст WCAG AA, видимий фокус, посилання «Перейти до вмісту», повага до «Зменшити рух».
+- Анімації лише на `transform`/`opacity`; ефекти прокрутки — CSS scroll-driven animations; переходи між сторінками — React `<ViewTransition>`.
+- Фото — [Unsplash](https://unsplash.com/license), авторів перелічено в `apps/api/prisma/seed-photos.ts`.
+
 ## Корисні команди
 
 | Команда                                | Що робить                                                                  |
@@ -112,6 +120,7 @@
 | `pnpm --filter api db:deploy`          | Застосовує наявні міграції                                                 |
 | `pnpm --filter api db:seed`            | Додає демодані; повторний запуск лише доповнює розклад                     |
 | `pnpm --filter api db:seed:production` | Додає демодані в продакшн-базу (адреса з `apps/api/.env.production.local`) |
+| `pnpm --filter api photos:upload`      | Копіює демофото з Unsplash у Supabase Storage (бакет `media`)              |
 | `pnpm --filter api db:studio`          | Відкриває Prisma Studio для перегляду даних                                |
 | `pnpm --filter web api:types`          | Оновлює TypeScript-типи API для сайту з OpenAPI (API має бути запущений)   |
 | `pnpm format`                          | Форматує код за допомогою Prettier                                         |
