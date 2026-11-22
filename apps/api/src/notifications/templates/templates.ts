@@ -114,3 +114,45 @@ export class MembershipActivatedTemplate extends NotificationTemplate<
     return '/memberships';
   }
 }
+
+export class NewSectionTemplate extends NotificationTemplate<EventOf<'section.published'>> {
+  readonly type = 'NEW_SECTION';
+
+  protected title(event: EventOf<'section.published'>): string {
+    return `Нова секція: ${event.name}`;
+  }
+
+  protected lines(event: EventOf<'section.published'>): string[] {
+    return [
+      `У центрі «${event.centerName}» відкрилася секція «${event.name}» (${event.sport.name}).`,
+      'Ви обрали цей вид спорту в профілі, тож повідомляємо вам першими.',
+    ];
+  }
+
+  protected override link(event: EventOf<'section.published'>): string {
+    return `/sections/${event.sectionId}`;
+  }
+}
+
+export class PromotionTemplate extends NotificationTemplate<EventOf<'promotion.published'>> {
+  readonly type = 'PROMOTION';
+
+  protected title(event: EventOf<'promotion.published'>): string {
+    return `Знижка ${event.discountPercent}%: ${event.title}`;
+  }
+
+  protected lines(event: EventOf<'promotion.published'>): string[] {
+    const upcoming = event.startsAt.getTime() > Date.now();
+    return [
+      event.description,
+      upcoming
+        ? `Діє з ${formatWhen(event.startsAt)} до ${formatWhen(event.endsAt)}.`
+        : `Діє до ${formatWhen(event.endsAt)}.`,
+      'Знижка застосується сама під час бронювання.',
+    ];
+  }
+
+  protected override link(event: EventOf<'promotion.published'>): string {
+    return event.sport ? `/catalog?sport=${event.sport.slug}` : '/catalog';
+  }
+}

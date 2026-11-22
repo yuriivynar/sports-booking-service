@@ -34,6 +34,25 @@ export type DomainEvent =
   | ({ type: 'membership.activated'; endsAt: Date | null } & MembershipEventBase)
   | ({ type: 'membership.expired' } & MembershipEventBase)
   | {
+      /** A section went on sale; fans of its sport hear about it. */
+      type: 'section.published';
+      sectionId: string;
+      name: string;
+      centerName: string;
+      sport: { id: string; slug: string; name: string };
+    }
+  | {
+      /** A promotion went live; fans of its sport (everyone, if network-wide) hear about it. */
+      type: 'promotion.published';
+      promotionId: string;
+      title: string;
+      description: string;
+      discountPercent: number;
+      startsAt: Date;
+      endsAt: Date;
+      sport: { id: string; slug: string; name: string } | null;
+    }
+  | {
       /** An administrator called a group session off; its bookings must be cancelled. */
       type: 'session.cancelled';
       sessionId: string;
