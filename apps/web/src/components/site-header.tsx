@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/brand/logo';
 import { DesktopNav } from '@/components/layout/desktop-nav';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { getSessionUser } from '@/lib/auth';
@@ -20,7 +21,10 @@ export async function SiteHeader() {
         <div className="ml-auto flex items-center gap-1">
           <ThemeToggle />
           {user ? (
-            <UserMenu user={user} />
+            <>
+              <NotificationBell />
+              <UserMenu user={user} />
+            </>
           ) : (
             <Button asChild size="sm" className="ml-1">
               <Link href="/login">Увійти</Link>

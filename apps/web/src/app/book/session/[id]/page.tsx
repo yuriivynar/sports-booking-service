@@ -26,6 +26,16 @@ export default async function BookSessionPage({ params }: PageProps<'/book/sessi
     body: request,
   });
   if (response.status === 404) notFound();
+  const { data: owned } = await api.GET('/api/memberships');
+  const memberships = (owned ?? [])
+    .filter((m) => m.status === 'ACTIVE')
+    .map((m) => ({
+      id: m.id,
+      label:
+        m.visitsLeft === null
+          ? `${m.plan.name} (безліміт)`
+          : `${m.plan.name} (лишилося ${m.visitsLeft})`,
+    }));
 
   return (
     <>
@@ -83,7 +93,11 @@ export default async function BookSessionPage({ params }: PageProps<'/book/sessi
         </div>
         {quote && (
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <CheckoutPanel request={request} bonusBalance={bonusBalance} />
+            <CheckoutPanel
+              request={request}
+              bonusBalance={bonusBalance}
+              memberships={memberships}
+            />
           </aside>
         )}
       </div>

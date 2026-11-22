@@ -196,6 +196,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/me/offers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['OffersController_offers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/bookings/quote': {
     parameters: {
       query?: never;
@@ -302,6 +318,150 @@ export interface paths {
     get: operations['AvailabilityController_trainer'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/membership-plans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MembershipsController_plans'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/memberships': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['MembershipsController_mine'];
+    put?: never;
+    post: operations['MembershipsController_purchase'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/memberships/{id}/pay': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['MembershipsController_pay'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/me/loyalty': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['LoyaltyController_summary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['NotificationsController_list'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notifications/read-all': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotificationsController_readAll'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/notifications/{id}/read': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['NotificationsController_read'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/jobs/reminders': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JobsController_scheduled'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/admin/jobs/run': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['JobsController_runNow'];
     delete?: never;
     options?: never;
     head?: never;
@@ -548,6 +708,13 @@ export interface components {
       /** Format: date-time */
       endsAt: string;
     };
+    OffersDto: {
+      /** @description False when the user has not set favourite sports or a level yet */
+      personalized: boolean;
+      promotions: components['schemas']['PromotionDto'][];
+      /** @description Up to 6 matching sections */
+      sections: components['schemas']['SectionSummaryDto'][];
+    };
     /** @enum {string} */
     BookingType: 'HALL_RENTAL' | 'GROUP_SESSION' | 'PERSONAL_TRAINING';
     CreateBookingDto: {
@@ -652,7 +819,7 @@ export interface components {
       createdAt: string;
       allowedActions: components['schemas']['BookingAction'][];
     };
-    PayBookingDto: {
+    CardPaymentDto: {
       /** @example 4242 4242 4242 4242 */
       cardNumber: string;
       /** @example 12 */
@@ -688,6 +855,122 @@ export interface components {
       /** @description Price of one hour, in kopecks */
       pricePerHour: number;
       slots: components['schemas']['SlotDto'][];
+    };
+    /** @enum {string} */
+    MembershipKind: 'SINGLE' | 'MONTHLY' | 'CORPORATE';
+    MembershipPlanDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example Місячний: 8 занять */
+      name: string;
+      description: string;
+      kind: components['schemas']['MembershipKind'];
+      /** @description Price in kopecks */
+      price: number;
+      /** @description null: no time limit */
+      durationDays: number | null;
+      /** @description null: unlimited visits */
+      visits: number | null;
+      /** @description null: any sport */
+      sport: components['schemas']['SportDto'] | null;
+      /** @description null: every center */
+      center: components['schemas']['CenterRefDto'] | null;
+    };
+    /** @enum {string} */
+    MembershipStatus: 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+    MembershipDto: {
+      /** Format: uuid */
+      id: string;
+      kind: components['schemas']['MembershipKind'];
+      status: components['schemas']['MembershipStatus'];
+      plan: components['schemas']['MembershipPlanDto'];
+      /** Format: date-time */
+      startsAt: string | null;
+      /** Format: date-time */
+      endsAt: string | null;
+      /** @description null: unlimited */
+      visitsLeft: number | null;
+      companyName: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    PurchaseMembershipDto: {
+      /** Format: uuid */
+      planId: string;
+      /** @description Required for corporate plans */
+      companyName?: string;
+    };
+    /** @enum {string} */
+    BonusReason: 'BOOKING_REWARD' | 'REDEMPTION' | 'REFUND' | 'ADJUSTMENT';
+    BonusEntryDto: {
+      /** Format: uuid */
+      id: string;
+      /** @description Positive for accruals, negative for spending */
+      amount: number;
+      reason: components['schemas']['BonusReason'];
+      note: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    LoyaltyDto: {
+      tier: components['schemas']['LoyaltyTier'];
+      /** @example Преміум */
+      label: string;
+      discountPercent: number;
+      pointsPer100Uah: number;
+      perks: string[];
+      bonusBalance: number;
+      /** @description Activities the user has attended */
+      completedVisits: number;
+      /** @description Visits that earn the Premium card */
+      premiumVisits: number;
+      /** @description Latest bonus point movements */
+      history: components['schemas']['BonusEntryDto'][];
+    };
+    /** @enum {string} */
+    NotificationType:
+      | 'BOOKING_CONFIRMED'
+      | 'BOOKING_CANCELLED'
+      | 'REMINDER'
+      | 'BONUS_EARNED'
+      | 'NEW_SECTION'
+      | 'PROMOTION'
+      | 'MEMBERSHIP';
+    NotificationDto: {
+      /** Format: uuid */
+      id: string;
+      type: components['schemas']['NotificationType'];
+      /** @example Бронювання підтверджено */
+      title: string;
+      body: string;
+      /** @example /bookings/123 */
+      link: string | null;
+      /** Format: date-time */
+      readAt: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    NotificationListDto: {
+      /** @description Latest 50, newest first */
+      items: components['schemas']['NotificationDto'][];
+      /** @description Unread notifications in total */
+      unread: number;
+    };
+    JobRunDto: {
+      /** @description Unpaid bookings whose hold ran out */
+      releasedHolds: number;
+      /** @description Bookings marked as completed; their points are credited */
+      completedBookings: number;
+      /** @description Memberships past their end date */
+      expiredMemberships: number;
+      /** @description Reminders sent 24 hours before */
+      reminders24h: number;
+      /** @description Reminders sent 2 hours before */
+      reminders2h: number;
+      /** Format: date-time */
+      startedAt: string;
+      /** @description Duration in milliseconds */
+      durationMs: number;
     };
   };
   responses: never;
@@ -1043,6 +1326,26 @@ export interface operations {
       };
     };
   };
+  OffersController_offers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Promotions and sections for the user’s interests */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OffersDto'];
+        };
+      };
+    };
+  };
   BookingsController_quote: {
     parameters: {
       query?: never;
@@ -1206,7 +1509,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['PayBookingDto'];
+        'application/json': components['schemas']['CardPaymentDto'];
       };
     };
     responses: {
@@ -1353,6 +1656,253 @@ export interface operations {
       };
       /** @description Тренера не знайдено */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MembershipsController_plans: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Plans on sale, cheapest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipPlanDto'][];
+        };
+      };
+    };
+  };
+  MembershipsController_mine: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The signed-in user’s memberships */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipDto'][];
+        };
+      };
+    };
+  };
+  MembershipsController_purchase: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PurchaseMembershipDto'];
+      };
+    };
+    responses: {
+      /** @description PENDING until paid */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipDto'];
+        };
+      };
+      /** @description Тариф не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  MembershipsController_pay: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CardPaymentDto'];
+      };
+    };
+    responses: {
+      /** @description Paid and active from now */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MembershipDto'];
+        };
+      };
+      /** @description The card was declined */
+      402: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Already paid or cancelled */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LoyaltyController_summary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Card, perks, progress and points history */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LoyaltyDto'];
+        };
+      };
+    };
+  };
+  NotificationsController_list: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotificationListDto'];
+        };
+      };
+    };
+  };
+  NotificationsController_readAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every notification is marked as read */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  NotificationsController_read: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Marked as read */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Сповіщення не знайдено */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JobsController_scheduled: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['JobRunDto'];
+        };
+      };
+      /** @description Wrong or missing CRON_SECRET */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  JobsController_runNow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['JobRunDto'];
+        };
+      };
+      /** @description Administrators only */
+      403: {
         headers: {
           [name: string]: unknown;
         };

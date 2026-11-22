@@ -1,11 +1,18 @@
 'use client';
 
-import { CalendarCheck, Coins, Loader2 } from 'lucide-react';
+import { CalendarCheck, Coins, Loader2, Ticket } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { apiErrorMessage, type BookingQuote, type CreateBookingBody } from '@/lib/api';
@@ -17,7 +24,11 @@ interface Props {
   /** What to book; null until the user picks a slot. */
   request: CreateBookingBody | null;
   bonusBalance: number;
+  /** Active memberships the user can pay with (group sessions only). */
+  memberships?: { id: string; label: string }[];
 }
+
+const NO_MEMBERSHIP = 'none';
 
 type QuoteResult =
   | { key: string; kind: 'ready'; quote: BookingQuote }
@@ -27,15 +38,17 @@ type QuoteResult =
  * Live price for the chosen slot. The server prices every change, so the
  * page never shows a number the booking would not get.
  */
-export function CheckoutPanel({ request, bonusBalance }: Props) {
+export function CheckoutPanel({ request, bonusBalance, memberships = [] }: Props) {
   const router = useRouter();
   const [usePoints, setUsePoints] = useState(false);
+  const [membershipId, setMembershipId] = useState(NO_MEMBERSHIP);
   const [result, setResult] = useState<QuoteResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const body: CreateBookingBody | null = request && {
     ...request,
     pointsToRedeem: usePoints ? bonusBalance : 0,
+    ...(membershipId !== NO_MEMBERSHIP && { membershipId }),
   };
   const key = JSON.stringify(body);
   // Derived, not stored: a result for another request means a new one is on its way.
@@ -115,6 +128,27 @@ export function CheckoutPanel({ request, bonusBalance }: Props) {
           finalPrice={state.quote.finalPrice}
           pointsEarned={state.quote.pointsEarned}
         />
+      )}
+
+      {memberships.length > 0 && (
+        <div className="space-y-2 rounded-2xl bg-muted/60 p-3">
+          <Label htmlFor="membership" className="flex items-center gap-2 text-sm font-normal">
+            <Ticket className="size-4 text-ink" aria-hidden /> Оплатити абонементом
+          </Label>
+          <Select value={membershipId} onValueChange={setMembershipId}>
+            <SelectTrigger id="membership" className="w-full bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_MEMBERSHIP}>Без абонемента</SelectItem>
+              {memberships.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
       {bonusBalance > 0 && (
