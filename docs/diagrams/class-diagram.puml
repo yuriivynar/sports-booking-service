@@ -1,0 +1,254 @@
+@startuml class-diagram
+' Діаграма класів API SportHub з патернами GoF (колір = патерн).
+' Згенерувати PNG: docker run --rm -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/class-diagram.puml
+
+left to right direction
+skinparam dpi 110
+skinparam defaultFontName "DejaVu Sans"
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam linetype ortho
+skinparam nodesep 18
+skinparam ranksep 60
+skinparam ArrowColor #4A5568
+skinparam class {
+  BorderColor #4A5568
+  BackgroundColor #FFFFFF
+  HeaderBackgroundColor #FFFFFF
+  BackgroundColor<<Singleton>> #FFF3E0
+  BackgroundColor<<Builder>> #FFFDE7
+  BackgroundColor<<Factory Method>> #E3F2FD
+  BackgroundColor<<Chain of Responsibility>> #E8F5E9
+  BackgroundColor<<State>> #FCE4EC
+  BackgroundColor<<Decorator>> #F3E5F5
+  BackgroundColor<<Strategy>> #E0F7FA
+  BackgroundColor<<Adapter>> #FFF8E1
+  BackgroundColor<<Facade>> #FFE0CC
+  BackgroundColor<<Observer>> #ECEFF1
+}
+skinparam package {
+  BorderColor #A0AEC0
+  FontColor #2D3748
+}
+hide empty members
+
+title SportHub API — діаграма класів і патерни GoF
+
+package "prisma" {
+  class PrismaService <<Singleton>> {
+    один пул з'єднань на застосунок (DI)
+  }
+}
+
+package "catalog" {
+  class CatalogController
+  class CatalogService {
+    + searchSections(filters) «director»
+  }
+  class CatalogQueryBuilder <<Builder>> {
+    + forSport(slug) : this
+    + atLevel(level) : this
+    + inCenter(slug) : this
+    + paginate(page, size) : this
+    + build() : CatalogQuery
+  }
+}
+
+package "bookings" {
+  class BookingsController
+  class AvailabilityService
+
+  class BookingFacade <<Facade>> {
+    + quote(userId, request)
+    + book(userId, request)
+    + pay(userId, id, card)
+    + cancel(userId, id, reason)
+    + releaseExpiredHolds()
+  }
+
+  abstract class BookingCreator <<Factory Method>> {
+    + prepare(request) : BookingDraft
+    # {abstract} createDraft(id, request) : BookingDraft
+    + {abstract} release(tx, booking)
+  }
+  class HallRentalCreator <<Factory Method>>
+  class GroupSessionCreator <<Factory Method>>
+  class PersonalTrainingCreator <<Factory Method>>
+  abstract class BookingDraft <<Factory Method>> {
+    + basePrice, startsAt, endsAt
+    + {abstract} reserve(tx, bookingId)
+  }
+  class HallRentalDraft <<Factory Method>>
+  class GroupSessionDraft <<Factory Method>>
+  class PersonalTrainingDraft <<Factory Method>>
+
+  abstract class BookingValidator <<Chain of Responsibility>> {
+    - next : BookingValidator
+    + setNext(v) : BookingValidator
+    + validate(ctx)
+    # {abstract} check(ctx)
+  }
+  class FutureStartValidator <<Chain of Responsibility>>
+  class OpeningHoursValidator <<Chain of Responsibility>>
+  class CapacityValidator <<Chain of Responsibility>>
+  class MembershipValidator <<Chain of Responsibility>>
+  class AvailabilityValidator <<Chain of Responsibility>>
+  class NoDuplicateValidator <<Chain of Responsibility>>
+
+  class BookingLifecycle <<State>> {
+    - state : BookingState
+    + pay() / confirm() / cancel() / complete()
+    + allowedActions()
+  }
+  abstract class BookingState <<State>> {
+    + pay(b) / confirm(b) / cancel(b) / complete(b)
+  }
+  class PendingState <<State>>
+  class ConfirmedState <<State>>
+  class CancelledState <<State>>
+  class CompletedState <<State>>
+
+  class PricingService
+  interface PriceCalculator <<Decorator>> {
+    + calculate(ctx) : PriceCalculation
+  }
+  class BasePriceCalculator <<Decorator>>
+  abstract class PriceDecorator <<Decorator>> {
+    - inner : PriceCalculator
+    # {abstract} apply(price, ctx)
+  }
+  class MembershipDecorator <<Decorator>>
+  class PromotionDecorator <<Decorator>>
+  class LoyaltyDecorator <<Decorator>>
+  class BonusPointsDecorator <<Decorator>>
+}
+
+package "loyalty" {
+  interface LoyaltyPolicy <<Strategy>> {
+    + discountPercent
+    + pointsFor(paid) : int
+    + coversForFree(subject) : bool
+  }
+  class StandardPolicy <<Strategy>>
+  class PremiumPolicy <<Strategy>>
+  class CorporatePolicy <<Strategy>>
+}
+
+package "payments" {
+  abstract class PaymentGateway <<Adapter>> {
+    + charge(request) : ChargeResult
+    + refund(ref, amount)
+  }
+  class SimulatedPaymentAdapter <<Adapter>>
+  class SimulatedAcquirer <<SDK банку>> {
+    + authorize(payload)
+    + reverse(transaction_id, amount_minor)
+  }
+}
+
+package "storage" {
+  abstract class FileStorage <<Adapter>> {
+    + upload(path, data, type) : url
+    + remove(path)
+  }
+  class SupabaseStorageAdapter <<Adapter>>
+  class "Supabase StorageClient" as SupabaseSdk
+}
+
+package "events" {
+  class EventBus <<Observer>> {
+    + subscribe(type, handler)
+    + publish(event)
+  }
+}
+
+package "users / auth" {
+  class UsersController
+  class UsersService {
+    + ensureUser(claims)
+    + setAvatar(userId, file)
+  }
+  class AuthGuard
+  class RolesGuard
+}
+
+' --- Catalog: Builder ---
+CatalogController --> CatalogService
+CatalogService ..> CatalogQueryBuilder : director
+CatalogService --> PrismaService
+
+' --- Facade ---
+BookingsController --> BookingFacade
+AvailabilityService --> BookingFacade
+BookingFacade --> BookingCreator : creators.for(type)
+BookingFacade --> BookingValidator : head of chain
+BookingFacade --> PricingService
+BookingFacade ..> BookingLifecycle : creates
+BookingFacade --> PaymentGateway
+BookingFacade --> EventBus
+BookingFacade --> PrismaService
+
+' --- Factory Method ---
+BookingCreator <|-- HallRentalCreator
+BookingCreator <|-- GroupSessionCreator
+BookingCreator <|-- PersonalTrainingCreator
+BookingDraft <|-- HallRentalDraft
+BookingDraft <|-- GroupSessionDraft
+BookingDraft <|-- PersonalTrainingDraft
+HallRentalCreator ..> HallRentalDraft : creates
+GroupSessionCreator ..> GroupSessionDraft : creates
+PersonalTrainingCreator ..> PersonalTrainingDraft : creates
+
+' --- Chain of Responsibility ---
+BookingValidator o--> BookingValidator : next
+BookingValidator <|-- FutureStartValidator
+BookingValidator <|-- OpeningHoursValidator
+BookingValidator <|-- CapacityValidator
+BookingValidator <|-- MembershipValidator
+BookingValidator <|-- AvailabilityValidator
+BookingValidator <|-- NoDuplicateValidator
+
+' --- State ---
+BookingLifecycle o--> BookingState : state
+BookingState <|-- PendingState
+BookingState <|-- ConfirmedState
+BookingState <|-- CancelledState
+BookingState <|-- CompletedState
+
+' --- Decorator + Strategy ---
+PricingService --> PriceCalculator
+PriceCalculator <|.. BasePriceCalculator
+PriceCalculator <|.. PriceDecorator
+PriceDecorator o--> PriceCalculator : inner
+PriceDecorator <|-- MembershipDecorator
+PriceDecorator <|-- PromotionDecorator
+PriceDecorator <|-- LoyaltyDecorator
+PriceDecorator <|-- BonusPointsDecorator
+LoyaltyDecorator ..> LoyaltyPolicy
+LoyaltyPolicy <|.. StandardPolicy
+LoyaltyPolicy <|.. PremiumPolicy
+LoyaltyPolicy <|.. CorporatePolicy
+
+' --- Adapters ---
+PaymentGateway <|-- SimulatedPaymentAdapter
+SimulatedPaymentAdapter --> SimulatedAcquirer : adaptee
+FileStorage <|-- SupabaseStorageAdapter
+SupabaseStorageAdapter --> SupabaseSdk : adaptee
+UsersController --> UsersService
+UsersService --> FileStorage
+UsersService --> PrismaService
+
+legend right
+  |= Колір |= Патерн |= Тип |
+  |<#FFF3E0>| Singleton | породжувальний |
+  |<#FFFDE7>| Builder | породжувальний |
+  |<#E3F2FD>| Factory Method | породжувальний |
+  |<#FFF8E1>| Adapter | структурний |
+  |<#FFE0CC>| Facade | структурний |
+  |<#F3E5F5>| Decorator | структурний |
+  |<#E0F7FA>| Strategy | поведінковий |
+  |<#FCE4EC>| State | поведінковий |
+  |<#E8F5E9>| Chain of Responsibility | поведінковий |
+  |<#ECEFF1>| Observer | поведінковий |
+endlegend
+@enduml
