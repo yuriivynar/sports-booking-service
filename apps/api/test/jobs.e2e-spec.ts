@@ -110,19 +110,26 @@ describe('Scheduled jobs and offers (e2e)', () => {
     });
   });
 
-  it('sends each reminder once', async () => {
+  it('sends each reminder once, close to its time', async () => {
     const user = await newUser();
     const id = await confirmedBooking(user);
-    await moveBooking(id, 20);
+    const reminders = async () =>
+      (await types(user)).filter((t: string) => t === 'REMINDER').length;
 
+    // Ten hours ahead is neither "about a day" nor "soon".
+    await moveBooking(id, 10);
+    await runJob().expect(200);
+    expect(await reminders()).toBe(0);
+
+    await moveBooking(id, 23.5);
     await runJob().expect(200);
     await runJob().expect(200);
-    expect((await types(user)).filter((t: string) => t === 'REMINDER')).toHaveLength(1);
+    expect(await reminders()).toBe(1);
 
     await moveBooking(id, 1.5);
     await runJob().expect(200);
     await runJob().expect(200);
-    expect((await types(user)).filter((t: string) => t === 'REMINDER')).toHaveLength(2);
+    expect(await reminders()).toBe(2);
     const booking = await prisma.booking.findUniqueOrThrow({ where: { id } });
     expect(booking.reminder24hSentAt).not.toBeNull();
     expect(booking.reminder2hSentAt).not.toBeNull();
@@ -139,11 +146,12 @@ describe('Scheduled jobs and offers (e2e)', () => {
     expect(body.status).toBe('COMPLETED');
     const { body: loyalty } = await user.get('/api/me/loyalty').expect(200);
     expect(loyalty).toMatchObject({ bonusBalance: body.pointsEarned, completedVisits: 1 });
+    expect(body.pointsEarned).toBeGreaterThan(0);
     expect(loyalty.history[0]).toMatchObject({
       reason: 'BOOKING_REWARD',
       amount: body.pointsEarned,
     });
-    if (body.pointsEarned > 0) expect(await types(user)).toContain('BONUS_EARNED');
+    expect(await types(user)).toContain('BONUS_EARNED');
   });
 
   it('lets only administrators run the job by hand', async () => {
