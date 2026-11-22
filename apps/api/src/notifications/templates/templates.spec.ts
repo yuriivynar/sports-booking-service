@@ -124,6 +124,7 @@ describe('Notification templates (Template Method)', () => {
           startsAt: new Date(Date.now() + 86_400_000),
           endsAt: new Date(Date.now() + 7 * 86_400_000),
           sport: sportOfPromotion,
+          centerName: sportOfPromotion ? 'SportHub Сихів' : null,
         },
         { fullName: null },
         web,
@@ -133,6 +134,8 @@ describe('Notification templates (Template Method)', () => {
       link: '/catalog?sport=yoga',
     });
     expect(promotion(sport).body).toContain('Діє з ');
+    expect(promotion(sport).body).toContain('Лише в центрі «SportHub Сихів».');
     expect(promotion(null).link).toBe('/catalog');
+    expect(promotion(null).body).not.toContain('Лише в центрі');
   });
 });

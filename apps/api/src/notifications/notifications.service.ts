@@ -124,12 +124,16 @@ export class NotificationsService implements OnModuleInit {
     });
   }
 
-  /** Users who picked the sport as a favourite; for no sport, every client. */
+  /** Clients who picked the sport as a favourite; for no sport, every client. */
   private async fansOf(sportId: string | null): Promise<string[]> {
     const users = await this.prisma.user.findMany({
-      where: sportId ? { preferredSports: { some: { id: sportId } } } : { role: 'CLIENT' },
+      where: {
+        role: 'CLIENT',
+        ...(sportId && { preferredSports: { some: { id: sportId } } }),
+      },
       select: { id: true },
-      orderBy: { createdAt: 'asc' },
+      // The most recently active users first, if the cap is ever reached.
+      orderBy: { updatedAt: 'desc' },
       take: MAX_AUDIENCE,
     });
     return users.map((user) => user.id);

@@ -51,6 +51,8 @@ export type DomainEvent =
       startsAt: Date;
       endsAt: Date;
       sport: { id: string; slug: string; name: string } | null;
+      /** null: valid in every center. */
+      centerName: string | null;
     }
   | {
       /** An administrator called a group session off; its bookings must be cancelled. */

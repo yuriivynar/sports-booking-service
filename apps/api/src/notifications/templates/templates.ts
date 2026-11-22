@@ -145,6 +145,7 @@ export class PromotionTemplate extends NotificationTemplate<EventOf<'promotion.p
     const upcoming = event.startsAt.getTime() > Date.now();
     return [
       event.description,
+      ...(event.centerName ? [`Лише в центрі «${event.centerName}».`] : []),
       upcoming
         ? `Діє з ${formatWhen(event.startsAt)} до ${formatWhen(event.endsAt)}.`
         : `Діє до ${formatWhen(event.endsAt)}.`,
