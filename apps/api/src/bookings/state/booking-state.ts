@@ -20,7 +20,10 @@ export interface BookingTimes {
  *
  *   PENDING ──pay/confirm──▶ CONFIRMED ──complete──▶ COMPLETED
  *      │                        │
- *      └────────cancel──────────┴──▶ CANCELLED
+ *      └──cancel/cancelByCenter─┴──▶ CANCELLED
+ *
+ * `cancel` is the user's own cancellation and obeys the 2-hour deadline;
+ * `cancelByCenter` is the center calling a session off, allowed until it starts.
  */
 export abstract class BookingState {
   abstract readonly status: BookingStatus;
@@ -36,6 +39,11 @@ export abstract class BookingState {
   }
 
   cancel(_booking: BookingLifecycle): BookingState {
+    throw this.refuse('скасувати');
+  }
+
+  /** The center calls the activity off; the user gets everything back. */
+  cancelByCenter(_booking: BookingLifecycle): BookingState {
     throw this.refuse('скасувати');
   }
 
@@ -77,6 +85,10 @@ class PendingState extends BookingState {
     return STATES.CANCELLED;
   }
 
+  override cancelByCenter(booking: BookingLifecycle): BookingState {
+    return this.cancel(booking);
+  }
+
   override allowedActions(booking: BookingLifecycle): BookingAction[] {
     return booking.hasStarted() ? [] : ['pay', 'cancel'];
   }
@@ -88,6 +100,14 @@ class ConfirmedState extends BookingState {
   override cancel(booking: BookingLifecycle): BookingState {
     if (!booking.isBeforeCancellationDeadline()) {
       throw new ConflictException('Скасувати можна не пізніше ніж за 2 години до початку');
+    }
+    return STATES.CANCELLED;
+  }
+
+  /** No 2-hour deadline: the user did not choose this, so it is never too late. */
+  override cancelByCenter(booking: BookingLifecycle): BookingState {
+    if (booking.hasStarted()) {
+      throw new ConflictException('Заняття вже почалося');
     }
     return STATES.CANCELLED;
   }
@@ -158,6 +178,11 @@ export class BookingLifecycle {
 
   cancel(): BookingStatus {
     this.state = this.state.cancel(this);
+    return this.status;
+  }
+
+  cancelByCenter(): BookingStatus {
+    this.state = this.state.cancelByCenter(this);
     return this.status;
   }
 

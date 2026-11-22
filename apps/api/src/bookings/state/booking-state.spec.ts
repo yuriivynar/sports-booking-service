@@ -39,6 +39,14 @@ describe('BookingLifecycle (State)', () => {
     );
   });
 
+  it('lets the center cancel a confirmed booking inside the 2-hour deadline', () => {
+    expect(new BookingLifecycle('CONFIRMED', times(0.5), now).cancelByCenter()).toBe('CANCELLED');
+    expect(new BookingLifecycle('PENDING', times(0.5), now).cancelByCenter()).toBe('CANCELLED');
+    expect(() => new BookingLifecycle('CONFIRMED', times(-0.5), now).cancelByCenter()).toThrow(
+      'Заняття вже почалося',
+    );
+  });
+
   it('completes a confirmed booking after it ends', () => {
     expect(new BookingLifecycle('CONFIRMED', times(-2), now).complete()).toBe('COMPLETED');
     expect(() => new BookingLifecycle('CONFIRMED', times(-0.5), now).complete()).toThrow(
@@ -57,6 +65,7 @@ describe('BookingLifecycle (State)', () => {
 
     expect(() => booking.pay()).toThrow(ConflictException);
     expect(() => booking.cancel()).toThrow(ConflictException);
+    expect(() => booking.cancelByCenter()).toThrow(ConflictException);
     expect(() => booking.complete()).toThrow(ConflictException);
     expect(booking.allowedActions()).toEqual([]);
   });
