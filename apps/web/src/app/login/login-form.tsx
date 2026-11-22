@@ -1,6 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { toast } from 'sonner';
@@ -101,6 +102,13 @@ export function LoginForm({ next }: { next: string | null }) {
       <Button variant="outline" className="w-full" onClick={signInWithGoogle} disabled={pending}>
         <GoogleIcon /> Продовжити з Google
       </Button>
+      <p className="-mt-3 text-center text-xs text-muted-foreground">
+        Як ми обробляємо дані — у{' '}
+        <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+          політиці конфіденційності
+        </Link>
+        .
+      </p>
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <Separator className="flex-1" /> або email <Separator className="flex-1" />
