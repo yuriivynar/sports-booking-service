@@ -64,4 +64,8 @@ describe('SimulatedPaymentAdapter (Adapter)', () => {
 
     expect(reverse).toHaveBeenCalledWith('sim_abc', 25_000);
   });
+
+  it('accepts a four-digit CVC, as the payment form allows', async () => {
+    expect(await charge({ cvc: '1234' })).toMatchObject({ ok: true });
+  });
 });
