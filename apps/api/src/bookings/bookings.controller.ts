@@ -14,7 +14,8 @@ import type { CurrentUserData } from '../auth/authenticated-user.js';
 import { CurrentUser } from '../auth/decorators.js';
 import { BookingFacade } from './booking.facade.js';
 import { BookingDto, BookingQuoteDto } from './dto/booking.dto.js';
-import { CancelBookingDto, CreateBookingDto, PayBookingDto } from './dto/booking-request.dto.js';
+import { CardPaymentDto, toCardDetails } from '../payments/dto/card-payment.dto.js';
+import { CancelBookingDto, CreateBookingDto } from './dto/booking-request.dto.js';
 
 /** Thin HTTP layer: every call goes to the BookingFacade. */
 @ApiTags('Бронювання')
@@ -71,15 +72,9 @@ export class BookingsController {
   pay(
     @CurrentUser() user: CurrentUserData,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: PayBookingDto,
+    @Body() dto: CardPaymentDto,
   ): Promise<BookingDto> {
-    return this.bookings.pay(user.id, id, {
-      number: dto.cardNumber,
-      expMonth: dto.expMonth,
-      expYear: dto.expYear,
-      cvc: dto.cvc,
-      holder: dto.holder,
-    });
+    return this.bookings.pay(user.id, id, toCardDetails(dto));
   }
 
   @Post(':id/cancel')
