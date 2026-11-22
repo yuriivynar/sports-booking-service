@@ -1,0 +1,80 @@
+@startuml deployment
+' Діаграма компонентів і розгортання SportHub.
+' Згенерувати PNG: docker run --rm -e PLANTUML_LIMIT_SIZE=16384 -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/deployment.puml
+
+skinparam dpi 140
+skinparam defaultFontName "DejaVu Sans"
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam ArrowColor #4A5568
+skinparam node {
+  BorderColor #4A5568
+  BackgroundColor #FFFFFF
+}
+skinparam component {
+  BorderColor #3B6EA8
+  BackgroundColor #EEF4FF
+}
+skinparam database {
+  BorderColor #3B6EA8
+  BackgroundColor #EEF4FF
+}
+
+title SportHub — компоненти й розгортання
+
+actor "Клієнт /\nадміністратор" as user
+
+node "Браузер" as browser {
+  component "React 19\n(клієнтські компоненти)" as spa
+}
+
+cloud "Vercel (команда sport-hub5)" as vercel {
+  node "sports-booking-service-web" as webnode {
+    component "Next.js 16 App Router\nсерверні компоненти, proxy.ts" as web
+  }
+  node "sports-booking-service-api\nфункція Node 24, регіон dub1" as apinode {
+    component "NestJS 12 REST API\n/api/*, Swagger /api/docs" as api
+    component "EventBus + спостерігачі\n(сповіщення, лояльність)" as bus
+    component "EmailSender\n(LogEmailAdapter на Vercel)" as mail
+  }
+}
+
+cloud "Supabase, eu-west-1 (Ірландія)" as supabase {
+  database "PostgreSQL 17\nRLS, exclusion constraints,\nCHECK, часткові індекси" as pg
+  component "Auth (GoTrue)\nemail + Google, JWT ES256" as auth
+  component "Storage\nбакет media" as storage
+  component "pg_cron + pg_net\n+ Vault" as cron
+}
+
+cloud "Google" as google {
+  component "OAuth 2.0" as oauth
+}
+
+cloud "GitHub" as github {
+  component "Репозиторій\nsports-booking-service" as repo
+  component "Actions CI\nformat, lint, typecheck,\nunit, e2e, build" as ci
+}
+
+node "Локальна розробка\n(Docker Compose)" as local {
+  database "Postgres 17 :5433\nsports_booking, *_test" as localpg
+  component "Mailpit\nSMTP :1025, UI :8025" as mailpit
+}
+
+user --> spa
+spa --> web : HTTPS (сторінки)
+spa --> api : HTTPS + Bearer JWT\n(openapi-fetch)
+web --> api : HTTPS + Bearer JWT\n(серверний рендер)
+spa --> auth : вхід, сесія (cookie)
+auth --> oauth : OAuth redirect
+api --> pg : Prisma 7 + adapter-pg\n(pooler, DATABASE_URL)
+api ..> auth : JWKS (перевірка підпису)
+api --> storage : фото (SupabaseStorageAdapter)
+spa ..> storage : публічні фото (next/image)
+api --> bus
+bus --> mail
+cron --> api : POST /api/jobs/reminders\nкожні 15 хв, CRON_SECRET
+repo --> ci : pull request
+repo --> vercel : Git integration\n(prod: prisma migrate deploy)
+mail ..> mailpit : локально: SMTP
+api ..> localpg : локально / e2e
+@enduml
