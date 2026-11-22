@@ -217,6 +217,7 @@ export class BookingFacade {
 
   async listMine(userId: string): Promise<BookingDto[]> {
     const now = new Date();
+    await this.releaseExpiredHolds(now);
     const rows = await this.prisma.booking.findMany({
       where: { userId },
       orderBy: { startsAt: 'desc' },
@@ -228,6 +229,12 @@ export class BookingFacade {
 
   async findOne(userId: string, bookingId: string): Promise<BookingDto> {
     return toBookingDto(await this.findOwned(userId, bookingId));
+  }
+
+  /** The booking page: shows a run-out hold as cancelled, not as still payable. */
+  async view(userId: string, bookingId: string): Promise<BookingDto> {
+    await this.releaseExpiredHolds();
+    return this.findOne(userId, bookingId);
   }
 
   /**

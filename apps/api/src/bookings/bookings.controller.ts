@@ -60,7 +60,7 @@ export class BookingsController {
     @CurrentUser() user: CurrentUserData,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<BookingDto> {
-    return this.bookings.findOne(user.id, id);
+    return this.bookings.view(user.id, id);
   }
 
   @Post(':id/pay')
