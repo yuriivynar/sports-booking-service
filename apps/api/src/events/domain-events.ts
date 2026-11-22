@@ -1,4 +1,4 @@
-import type { BookingType } from '../generated/prisma/client.js';
+import type { BookingType, MembershipKind } from '../generated/prisma/client.js';
 
 interface BookingEventBase {
   bookingId: string;
@@ -8,13 +8,23 @@ interface BookingEventBase {
   startsAt: Date;
 }
 
-/** Facts the booking core announces. Subscribers react without the core knowing them. */
+interface MembershipEventBase {
+  membershipId: string;
+  userId: string;
+  planName: string;
+  kind: MembershipKind;
+}
+
+/** Facts the core announces. Subscribers react without the core knowing them. */
 export type DomainEvent =
   | ({ type: 'booking.created'; finalPrice: number } & BookingEventBase)
   | ({ type: 'booking.confirmed'; pointsEarned: number } & BookingEventBase)
   | ({ type: 'booking.completed'; pointsEarned: number } & BookingEventBase)
   | ({ type: 'booking.cancelled'; refunded: number; reason: string | null } & BookingEventBase)
-  | ({ type: 'payment.failed'; reason: string } & BookingEventBase);
+  | ({ type: 'booking.reminder'; hoursBefore: 24 | 2 } & BookingEventBase)
+  | ({ type: 'payment.failed'; reason: string } & BookingEventBase)
+  | ({ type: 'membership.activated'; endsAt: Date | null } & MembershipEventBase)
+  | ({ type: 'membership.expired' } & MembershipEventBase);
 
 export type DomainEventType = DomainEvent['type'];
 export type EventOf<T extends DomainEventType> = Extract<DomainEvent, { type: T }>;
