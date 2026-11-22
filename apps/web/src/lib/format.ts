@@ -3,15 +3,15 @@ import type { AgeGroup, HallKind, SkillLevel } from './api';
 /** Every center is in Lviv, so dates are always shown in Kyiv time. */
 export const TIME_ZONE = 'Europe/Kyiv';
 
-const priceFormatter = new Intl.NumberFormat('uk-UA', {
-  style: 'currency',
-  currency: 'UAH',
-  maximumFractionDigits: 0,
-});
+const amountFormatter = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 0 });
 
-/** Formats an amount in kopecks, for example 25000 → "250 ₴". */
+/**
+ * Formats an amount in kopecks, for example 25000 → "250 грн".
+ * "грн" rather than "₴": it is what Ukrainian services usually show, and the
+ * display font draws ₴ in an unfamiliar way.
+ */
 export function formatPrice(kopecks: number): string {
-  return priceFormatter.format(kopecks / 100);
+  return `${amountFormatter.format(kopecks / 100)} грн`;
 }
 
 const dayFormatter = new Intl.DateTimeFormat('uk-UA', {
