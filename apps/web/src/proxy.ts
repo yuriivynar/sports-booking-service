@@ -1,7 +1,16 @@
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/proxy';
 
 export function proxy(request: NextRequest) {
+  // When the requested redirect URL is not on Supabase's allow list, Supabase
+  // sends the OAuth code to the Site URL instead ("/?code=..."). Forward it to
+  // the callback, so sign-in still completes.
+  const code = request.nextUrl.searchParams.get('code');
+  if (code && request.nextUrl.pathname !== '/auth/callback') {
+    const callback = new URL('/auth/callback', request.url);
+    callback.searchParams.set('code', code);
+    return NextResponse.redirect(callback);
+  }
   return updateSession(request);
 }
 
