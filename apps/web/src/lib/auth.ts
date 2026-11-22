@@ -21,7 +21,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     id: claims.sub,
     email: claims.email,
     name: text(metadata.full_name) ?? text(metadata.name),
-    avatarUrl: text(metadata.avatar_url) ?? text(metadata.picture),
+    // An uploaded photo wins over the one from the Google account.
+    avatarUrl:
+      text(metadata.custom_avatar_url) ?? text(metadata.avatar_url) ?? text(metadata.picture),
   };
 }
 

@@ -6,6 +6,7 @@ import { CatalogModule } from './catalog/catalog.module.js';
 import { EventsModule } from './events/events.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -14,6 +15,7 @@ import { UsersModule } from './users/users.module.js';
     ConfigModule.forRoot({ isGlobal: true, cache: true }),
     PrismaModule,
     EventsModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     CatalogModule,
