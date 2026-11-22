@@ -166,6 +166,8 @@ model SportCenter {
   /// Opening hours in whole hours, local time.
   openHour    Int      @default(7) @map("open_hour")
   closeHour   Int      @default(22) @map("close_hour")
+  /// Hidden from the catalog; kept because bookings refer to its halls.
+  isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
