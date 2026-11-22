@@ -296,7 +296,11 @@ model Occupancy {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   hall         Hall?         @relation(fields: [hallId], references: [id], onDelete: Cascade)
-  trainer      Trainer?      @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  /// NO ACTION: deleting a trainer must not silently free the hall a group
+  /// session of theirs holds; the admin deactivates the trainer instead.
+  /// Checked at the end of the statement, so a cascade that removes the
+  /// sessions too (deleting a whole center) still goes through.
+  trainer      Trainer?      @relation(fields: [trainerId], references: [id], onDelete: NoAction)
   booking      Booking?      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   groupSession GroupSession? @relation(fields: [groupSessionId], references: [id], onDelete: Cascade)
 
