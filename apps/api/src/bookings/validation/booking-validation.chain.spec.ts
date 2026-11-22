@@ -177,4 +177,12 @@ describe('Booking validation (Chain of Responsibility)', () => {
     await expect(chain.validate(context(session()))).rejects.toThrow(ConflictException);
     await expect(chain.validate(context(session()))).rejects.toThrow('Ви вже записані');
   });
+
+  it('rejects a start with stray seconds that would shift the whole slot', async () => {
+    const { chain } = fakeDatabase();
+    const start = new Date(kyivTime('2026-11-24', 10).getTime() + 30_000);
+    const shifted = rental({ startsAt: start, endsAt: new Date(start.getTime() + 3_600_000) });
+
+    await expect(chain.validate(context(shifted))).rejects.toThrow('на початку години');
+  });
 });
