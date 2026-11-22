@@ -31,6 +31,8 @@ next-env.d.ts
 # Private course materials: never pushed to GitHub
 docs/kursova_DPZSP.pdf
 docs/notes/
+# Course report: holds personal data (name, group, teacher)
+docs/report/
 
 # Markdown files stay local; README is the only exception
 *.md
