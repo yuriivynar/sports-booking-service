@@ -57,7 +57,7 @@ export function Hero({ stats }: { stats: HeroStats | null }) {
         </h1>
         <p className="max-w-2xl text-lg text-white/75 sm:text-xl animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:120ms] fill-mode-backwards">
           Орендуйте зал на годину, записуйтеся на групові заняття або тренуйтеся з персональним
-          тренером. За кожне бронювання — бонусні бали.
+          тренером. За кожне відвідане заняття — бонусні бали.
         </p>
         <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 [animation-delay:240ms] fill-mode-backwards">
           <Button asChild size="lg">

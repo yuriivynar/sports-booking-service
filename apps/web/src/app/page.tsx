@@ -22,7 +22,7 @@ const STEPS = [
   {
     icon: Coins,
     title: 'Отримуйте бали',
-    text: 'Бонуси за кожне бронювання знижують ціну наступного.',
+    text: 'Бонуси за кожне відвідане заняття знижують ціну наступного.',
   },
 ];
 
@@ -198,7 +198,8 @@ export default async function HomePage() {
                     Тренуйтеся більше — платіть менше
                   </h2>
                   <p className="mt-4 text-white/70">
-                    Бали за кожне бронювання, а з карткою Premium — знижки та безкоштовний басейн.
+                    Бали за кожне відвідане заняття, а з карткою Premium — знижки та безкоштовний
+                    басейн.
                   </p>
                   <Button asChild size="lg" className="mt-6">
                     <Link href="/login">Почати зараз</Link>
@@ -209,14 +210,17 @@ export default async function HomePage() {
                     <li
                       key={tier.name}
                       className={cn(
-                        'relative aspect-[1.586] overflow-hidden rounded-2xl bg-gradient-to-br p-4 shadow-lift transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-2 hover:rotate-1',
+                        // Card-like proportions, but the height grows with the text.
+                        'relative flex min-h-36 flex-col overflow-hidden rounded-2xl bg-gradient-to-br p-4 shadow-lift transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-2 hover:rotate-1 sm:min-h-0 sm:aspect-[1.25]',
                         tier.tone,
                         index === 1 && 'sm:-translate-y-3',
                       )}
                     >
                       <div aria-hidden className="stripes absolute inset-0 text-white/10" />
                       <Crown className="relative size-5" aria-hidden />
-                      <p className="relative mt-3 font-display text-lg font-black">{tier.name}</p>
+                      <p className="relative mt-auto pt-3 font-display text-lg font-black">
+                        {tier.name}
+                      </p>
                       <p className="relative mt-1 text-xs text-white/85">{tier.perk}</p>
                     </li>
                   ))}
