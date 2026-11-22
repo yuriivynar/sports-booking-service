@@ -141,22 +141,24 @@ API складається з модулів NestJS. Бронювання про
 
 ## Корисні команди
 
-| Команда                                | Що робить                                                                  |
-| -------------------------------------- | -------------------------------------------------------------------------- |
-| `pnpm dev`                             | Запускає API і сайт у режимі розробки                                      |
-| `pnpm build`                           | Збирає обидва застосунки                                                   |
-| `pnpm lint`                            | Перевіряє код лінтерами (oxlint для API, ESLint для сайту)                 |
-| `pnpm typecheck`                       | Перевіряє типи TypeScript                                                  |
-| `pnpm test`                            | Запускає модульні тести                                                    |
-| `pnpm --filter api test:e2e`           | Запускає e2e-тести API на окремій базі `sports_booking_test`               |
-| `pnpm --filter api db:migrate`         | Створює та застосовує нову міграцію після зміни `schema.prisma`            |
-| `pnpm --filter api db:deploy`          | Застосовує наявні міграції                                                 |
-| `pnpm --filter api db:seed`            | Додає демодані; повторний запуск лише доповнює розклад                     |
-| `pnpm --filter api db:seed:production` | Додає демодані в продакшн-базу (адреса з `apps/api/.env.production.local`) |
-| `pnpm --filter api photos:upload`      | Копіює демофото з Unsplash у Supabase Storage (бакет `media`)              |
-| `pnpm --filter api db:studio`          | Відкриває Prisma Studio для перегляду даних                                |
-| `pnpm --filter web api:types`          | Оновлює TypeScript-типи API для сайту з OpenAPI (API має бути запущений)   |
-| `pnpm format`                          | Форматує код за допомогою Prettier                                         |
+| Команда                                         | Що робить                                                                                                                                                                               |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                      | Запускає API і сайт у режимі розробки                                                                                                                                                   |
+| `pnpm build`                                    | Збирає обидва застосунки                                                                                                                                                                |
+| `pnpm lint`                                     | Перевіряє код лінтерами (oxlint для API, ESLint для сайту)                                                                                                                              |
+| `pnpm typecheck`                                | Перевіряє типи TypeScript                                                                                                                                                               |
+| `pnpm test`                                     | Запускає модульні тести                                                                                                                                                                 |
+| `pnpm --filter api test:e2e`                    | Запускає e2e-тести API на окремій базі `sports_booking_test`                                                                                                                            |
+| `pnpm --filter api db:migrate`                  | Створює та застосовує нову міграцію після зміни `schema.prisma`                                                                                                                         |
+| `pnpm --filter api db:deploy`                   | Застосовує наявні міграції                                                                                                                                                              |
+| `pnpm --filter api db:seed`                     | Додає демодані; повторний запуск лише доповнює розклад                                                                                                                                  |
+| `pnpm --filter api db:seed:production`          | Додає демодані в продакшн-базу (адреса з `apps/api/.env.production.local`)                                                                                                              |
+| `pnpm --filter api photos:upload`               | Копіює демофото з Unsplash у Supabase Storage (бакет `media`)                                                                                                                           |
+| `pnpm --filter api db:demo`                     | Додає демоактивність: 120 клієнтів, абонементи, бронювання за 30 днів назад і 14 вперед, оплати, бали; `-- --reset` перебудовує, `-- --remove` прибирає (клієнти `@demo.sporthub.test`) |
+| `pnpm --filter api db:demo:production -- --yes` | Те саме для продакшн-бази (адреса з `apps/api/.env.production.local`); без `--yes` відмовляє                                                                                            |
+| `pnpm --filter api db:studio`                   | Відкриває Prisma Studio для перегляду даних                                                                                                                                             |
+| `pnpm --filter web api:types`                   | Оновлює TypeScript-типи API для сайту з OpenAPI (API має бути запущений)                                                                                                                |
+| `pnpm format`                                   | Форматує код за допомогою Prettier                                                                                                                                                      |
 
 ## CI/CD
 

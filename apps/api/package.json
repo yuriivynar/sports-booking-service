@@ -30,6 +30,8 @@
     "db:studio": "prisma studio",
     "vercel-build": "if [ \"$VERCEL_ENV\" = production ]; then prisma migrate deploy; fi && nest build",
     "db:seed:production": "tsx --env-file=.env.production.local prisma/seed.ts",
+    "db:demo": "tsx prisma/demo-data.ts",
+    "db:demo:production": "tsx --env-file=.env.production.local prisma/demo-data.ts",
     "photos:upload": "tsx scripts/upload-seed-photos.ts"
   },
   "dependencies": {
