@@ -1,6 +1,6 @@
 @startuml class-diagram
 ' Діаграма класів API SportHub з патернами GoF (колір = патерн).
-' Згенерувати PNG: docker run --rm -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/class-diagram.puml
+' Згенерувати PNG: docker run --rm -e PLANTUML_LIMIT_SIZE=16384 -v "$PWD/docs/diagrams:/data" plantuml/plantuml -tpng /data/class-diagram.puml
 
 left to right direction
 skinparam dpi 110
@@ -25,6 +25,7 @@ skinparam class {
   BackgroundColor<<Adapter>> #FFF8E1
   BackgroundColor<<Facade>> #FFE0CC
   BackgroundColor<<Observer>> #ECEFF1
+  BackgroundColor<<Template Method>> #EDE7F6
 }
 skinparam package {
   BorderColor #A0AEC0
@@ -63,7 +64,12 @@ package "bookings" {
     + book(userId, request)
     + pay(userId, id, card)
     + cancel(userId, id, reason)
+    + cancelSessionBookings(sessionId, reason)
     + releaseExpiredHolds()
+    + completeFinishedBookings()
+  }
+  class SessionCancellationListener <<Observer>> {
+    + onModuleInit() «subscribe session.cancelled»
   }
 
   abstract class BookingCreator <<Factory Method>> {
@@ -97,11 +103,13 @@ package "bookings" {
 
   class BookingLifecycle <<State>> {
     - state : BookingState
-    + pay() / confirm() / cancel() / complete()
+    + pay() / confirm() / cancel() / cancelByCenter() / complete()
     + allowedActions()
   }
   abstract class BookingState <<State>> {
-    + pay(b) / confirm(b) / cancel(b) / complete(b)
+    + pay(b) / confirm(b) / complete(b)
+    + cancel(b) «user, 2-hour deadline»
+    + cancelByCenter(b) «until it starts»
   }
   class PendingState <<State>>
   class ConfirmedState <<State>>
@@ -123,7 +131,33 @@ package "bookings" {
   class BonusPointsDecorator <<Decorator>>
 }
 
+package "memberships" {
+  class MembershipsService {
+    + purchase(userId, planId)
+    + pay(userId, id, card)
+    + expireEnded()
+  }
+  abstract class MembershipIssuer <<Factory Method>> {
+    + issue(plan, request) : MembershipTerms
+    # {abstract} createTerms(plan, request)
+  }
+  class SingleVisitIssuer <<Factory Method>>
+  class MonthlyIssuer <<Factory Method>>
+  class CorporateIssuer <<Factory Method>>
+  abstract class MembershipTerms <<Factory Method>> {
+    + visits
+    + period(paidAt)
+  }
+  class SingleVisitTerms <<Factory Method>>
+  class MonthlyTerms <<Factory Method>>
+  class CorporateTerms <<Factory Method>>
+}
+
 package "loyalty" {
+  class LoyaltyService <<Observer>> {
+    + recalculateTier(userId)
+    + onModuleInit() «subscribe membership.*, booking.completed»
+  }
   interface LoyaltyPolicy <<Strategy>> {
     + discountPercent
     + pointsFor(paid) : int
@@ -159,6 +193,65 @@ package "events" {
   class EventBus <<Observer>> {
     + subscribe(type, handler)
     + publish(event)
+  }
+}
+
+package "notifications" {
+  class NotificationsService <<Observer>> {
+    + onModuleInit() «on() / announce()»
+    - deliver(userIds, event, template)
+  }
+  abstract class NotificationTemplate <<Template Method>> {
+    + render(event, recipient, origin) «template method»
+    # {abstract} title(event)
+    # {abstract} lines(event)
+    # link(event) «hook»
+    # greeting(recipient) «hook»
+    # footer() «hook»
+  }
+  class BookingConfirmedTemplate <<Template Method>>
+  class BookingCancelledTemplate <<Template Method>>
+  class ReminderTemplate <<Template Method>>
+  class BonusEarnedTemplate <<Template Method>>
+  class MembershipActivatedTemplate <<Template Method>>
+  class NewSectionTemplate <<Template Method>>
+  class PromotionTemplate <<Template Method>>
+  abstract class EmailSender <<Adapter>> {
+    + send(message)
+  }
+  class SmtpEmailAdapter <<Adapter>>
+  class LogEmailAdapter <<Adapter>>
+  class "nodemailer Transporter" as Nodemailer
+}
+
+package "jobs" {
+  class JobsController {
+    + scheduled() «POST /jobs/reminders»
+    + runNow() «POST /admin/jobs/run»
+  }
+  class CronSecretGuard {
+    + canActivate() «timingSafeEqual»
+  }
+  class JobsService {
+    + runMaintenance() : JobRun
+    - sendReminders(hours)
+  }
+}
+
+package "admin" {
+  class AdminCatalogService {
+    + create/update/remove: center, hall, trainer, section
+    + uploadPhoto(file)
+  }
+  class AdminScheduleService {
+    + create(series)
+    + cancel(sessionId, reason)
+  }
+  class AdminOffersService {
+    + promotions / plans CRUD
+  }
+  class AdminStatsService {
+    + stats(days)
   }
 }
 
@@ -234,6 +327,51 @@ PaymentGateway <|-- SimulatedPaymentAdapter
 SimulatedPaymentAdapter --> SimulatedAcquirer : adaptee
 FileStorage <|-- SupabaseStorageAdapter
 SupabaseStorageAdapter --> SupabaseSdk : adaptee
+' --- Days 3-4: memberships, observers, templates, jobs, admin ---
+MembershipsService --> MembershipIssuer : issuers.for(kind)
+MembershipIssuer <|-- SingleVisitIssuer
+MembershipIssuer <|-- MonthlyIssuer
+MembershipIssuer <|-- CorporateIssuer
+MembershipTerms <|-- SingleVisitTerms
+MembershipTerms <|-- MonthlyTerms
+MembershipTerms <|-- CorporateTerms
+SingleVisitIssuer ..> SingleVisitTerms : creates
+MonthlyIssuer ..> MonthlyTerms : creates
+CorporateIssuer ..> CorporateTerms : creates
+MembershipsService --> PaymentGateway
+MembershipsService --> EventBus : publish membership.*
+
+LoyaltyService ..> EventBus : subscribe
+LoyaltyService ..> LoyaltyPolicy
+NotificationsService ..> EventBus : subscribe
+NotificationsService --> NotificationTemplate
+NotificationsService --> EmailSender
+NotificationTemplate <|-- BookingConfirmedTemplate
+NotificationTemplate <|-- BookingCancelledTemplate
+NotificationTemplate <|-- ReminderTemplate
+NotificationTemplate <|-- BonusEarnedTemplate
+NotificationTemplate <|-- MembershipActivatedTemplate
+NotificationTemplate <|-- NewSectionTemplate
+NotificationTemplate <|-- PromotionTemplate
+EmailSender <|-- SmtpEmailAdapter
+EmailSender <|-- LogEmailAdapter
+SmtpEmailAdapter --> Nodemailer : adaptee
+
+SessionCancellationListener ..> EventBus : subscribe
+SessionCancellationListener --> BookingFacade
+
+JobsController ..> CronSecretGuard : guarded by
+JobsController --> JobsService
+JobsService --> BookingFacade
+JobsService --> MembershipsService
+JobsService --> EventBus : publish booking.reminder
+
+AdminCatalogService --> FileStorage
+AdminCatalogService --> EventBus : publish section.published
+AdminOffersService --> EventBus : publish promotion.published
+AdminScheduleService --> EventBus : publish session.cancelled
+AdminStatsService --> PrismaService
+
 UsersController --> UsersService
 UsersService --> FileStorage
 UsersService --> PrismaService
@@ -250,5 +388,6 @@ legend right
   |<#FCE4EC>| State | поведінковий |
   |<#E8F5E9>| Chain of Responsibility | поведінковий |
   |<#ECEFF1>| Observer | поведінковий |
+  |<#EDE7F6>| Template Method | поведінковий |
 endlegend
 @enduml
