@@ -107,8 +107,10 @@ export class UsersService {
       include: PROFILE_INCLUDE,
     });
 
+    // Only files in this user's own folder: the first avatar URL comes from
+    // the sign-up metadata, which the user controls.
     const oldPath = previous.avatarUrl && this.storage.pathOf(previous.avatarUrl);
-    if (oldPath) {
+    if (oldPath?.startsWith(`avatars/${userId}/`)) {
       // A leftover file costs little; a failed request after a successful upload costs more.
       await this.storage.remove(oldPath).catch((error: unknown) => {
         this.logger.warn(`Could not delete old avatar ${oldPath}: ${String(error)}`);
