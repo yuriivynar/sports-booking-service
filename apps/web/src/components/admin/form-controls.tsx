@@ -200,7 +200,7 @@ export function useAdminAction() {
 
   async function run<T>(
     request: () => Promise<ApiResult<T>>,
-    success: string,
+    success: string | ((data: T) => string),
   ): Promise<T | undefined> {
     setPending(true);
     const result = await request().catch(() => null);
@@ -209,7 +209,7 @@ export function useAdminAction() {
       toast.error(apiErrorMessage(result?.error, 'Не вдалося зберегти. Спробуйте ще раз'));
       return undefined;
     }
-    toast.success(success);
+    toast.success(typeof success === 'string' ? success : success(result.data));
     router.refresh();
     return result.data;
   }

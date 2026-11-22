@@ -341,6 +341,8 @@ export default function DesignSystemPage() {
           <MaintenanceButton
             initial={{
               releasedHolds: 2,
+              sessionBookingsCancelled: 0,
+              refundsRetried: 0,
               completedBookings: 14,
               expiredMemberships: 1,
               reminders24h: 9,
