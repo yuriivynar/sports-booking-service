@@ -5,7 +5,6 @@ import {
   BarList,
   ChartCard,
   DailyColumns,
-  formatLongDay,
   MeterList,
   RevenueArea,
   SegmentedBar,
@@ -13,6 +12,7 @@ import {
 } from '@/components/admin/charts';
 import { MaintenanceButton } from '@/components/admin/maintenance-button';
 import { requireAdmin } from '@/lib/admin-session';
+import { formatLongDay } from '@/lib/chart-format';
 import { BOOKING_TYPE_LABELS, formatPrice, TIER_LABELS } from '@/lib/format';
 import { cn } from '@/lib/utils';
 

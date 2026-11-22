@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { axisNumber, niceMax } from './charts';
+import { axisNumber, niceMax } from './chart-format';
 
 describe('chart scales', () => {
   it('rounds the top of a scale to a clean number with a clean middle', () => {
