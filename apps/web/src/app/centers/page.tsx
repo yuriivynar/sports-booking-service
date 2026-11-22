@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { ApiUnavailable } from '@/components/api-unavailable';
 import { CenterCard } from '@/components/catalog/center-card';
+import { PageHeader } from '@/components/layout/page-header';
 import { CentersMap } from '@/components/map/centers-map-lazy';
 import { apiClient } from '@/lib/api';
 
@@ -12,25 +13,30 @@ export default async function CentersPage() {
     .catch(() => ({ data: undefined }));
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-10">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Центри SportHub у Львові</h1>
-        <p className="text-muted-foreground">Оберіть найзручніший центр поруч із вами.</p>
+    <>
+      <PageHeader
+        eyebrow="Мапа"
+        title="Центри SportHub у Львові"
+        lead="Оберіть найзручніший центр: від історичного центру до Сихова."
+      />
+      <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">
+        {!centers ? (
+          <ApiUnavailable />
+        ) : (
+          <>
+            <div className="reveal h-[440px] overflow-hidden rounded-3xl border shadow-lift">
+              <CentersMap centers={centers} className="h-full w-full" />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              {centers.map((center) => (
+                <div key={center.slug} className="reveal">
+                  <CenterCard center={center} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
-      {!centers ? (
-        <ApiUnavailable />
-      ) : (
-        <>
-          <div className="h-[420px] overflow-hidden rounded-lg border">
-            <CentersMap centers={centers} className="h-full w-full" />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {centers.map((center) => (
-              <CenterCard key={center.slug} center={center} />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    </>
   );
 }
