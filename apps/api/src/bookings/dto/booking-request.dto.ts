@@ -48,7 +48,11 @@ export class CreateBookingDto {
   @IsDate()
   startsAt?: Date;
 
-  @ApiPropertyOptional({ minimum: 1, maximum: MAX_RENTAL_HOURS, default: 1 })
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: MAX_RENTAL_HOURS,
+    description: 'Length of a hall rental; 1 hour when omitted',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
