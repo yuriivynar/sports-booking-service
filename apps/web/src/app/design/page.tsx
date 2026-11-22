@@ -1,12 +1,46 @@
 import { ArrowRight, Heart } from 'lucide-react';
 import type { Metadata } from 'next';
+import { BookingCard } from '@/components/booking/booking-card';
+import { BookingStatusBadge } from '@/components/booking/booking-status-badge';
+import { PaymentForm } from '@/components/booking/payment-form';
+import { PriceBreakdown } from '@/components/booking/price-breakdown';
 import { Logo, LogoMark } from '@/components/brand/logo';
 import { SeatsMeter } from '@/components/catalog/seats-meter';
 import { PageHeader } from '@/components/layout/page-header';
 import { CountUp } from '@/components/motion/count-up';
 import { Button } from '@/components/ui/button';
+import type { Booking } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'Дизайн-система' };
+
+/** Demo booking for the style guide; the dates are fixed, nothing is sent anywhere. */
+const DEMO_BOOKING: Booking = {
+  id: '00000000-0000-4000-8000-000000000000',
+  type: 'GROUP_SESSION',
+  status: 'CONFIRMED',
+  title: 'Йога для початківців',
+  hallName: 'Зала йоги',
+  trainerName: 'Олена Коваль',
+  sport: { slug: 'yoga', name: 'Йога', icon: 'flower-2', photoUrl: null },
+  center: { slug: 'sporthub-tsentr', name: 'SportHub Центр', address: 'просп. Свободи, 22' },
+  startsAt: '2026-11-27T16:00:00.000Z',
+  endsAt: '2026-11-27T17:00:00.000Z',
+  basePrice: 25_000,
+  discount: 7_000,
+  pointsRedeemed: 20,
+  finalPrice: 16_000,
+  pointsEarned: 4,
+  priceBreakdown: [
+    { kind: 'BASE', label: 'Базова ціна', amount: 25_000 },
+    { kind: 'PROMOTION', label: 'Акція «Тиждень йоги: −20%»', amount: -5_000 },
+    { kind: 'LOYALTY', label: 'Картка «Преміум» −10%', amount: -2_000 },
+    { kind: 'BONUS_POINTS', label: 'Бонусні бали: 20', amount: -2_000 },
+  ],
+  payBefore: null,
+  cancelReason: null,
+  createdAt: '2026-11-23T08:00:00.000Z',
+  allowedActions: [],
+};
 
 const COLORS = [
   {
@@ -183,6 +217,30 @@ export default function DesignSystemPage() {
               <div className="h-3" />
               <SeatsMeter capacity={15} seatsLeft={2} />
             </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-2xl font-bold">Бронювання</h2>
+          <p className="max-w-2xl text-muted-foreground">
+            Квиток зі статусом, розбивка ціни, яку будують декоратори на сервері, і форма імітованої
+            оплати.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'] as const).map((status) => (
+              <BookingStatusBadge key={status} status={status} />
+            ))}
+          </div>
+          <BookingCard booking={DEMO_BOOKING} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-3xl border bg-card p-6">
+              <PriceBreakdown
+                lines={DEMO_BOOKING.priceBreakdown}
+                finalPrice={DEMO_BOOKING.finalPrice}
+                pointsEarned={DEMO_BOOKING.pointsEarned}
+              />
+            </div>
+            <PaymentForm booking={{ ...DEMO_BOOKING, status: 'PENDING' }} />
           </div>
         </section>
 

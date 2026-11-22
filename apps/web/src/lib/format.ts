@@ -1,4 +1,4 @@
-import type { AgeGroup, HallKind, SkillLevel } from './api';
+import type { AgeGroup, BookingStatus, BookingType, HallKind, SkillLevel } from './api';
 
 /** Every center is in Lviv, so dates are always shown in Kyiv time. */
 export const TIME_ZONE = 'Europe/Kyiv';
@@ -81,3 +81,21 @@ export const HALL_KIND_LABELS: Record<HallKind, string> = {
   FIELD: 'Поле',
   STUDIO: 'Студія',
 };
+
+export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  PENDING: 'Очікує оплати',
+  CONFIRMED: 'Підтверджено',
+  CANCELLED: 'Скасовано',
+  COMPLETED: 'Завершено',
+};
+
+export const BOOKING_TYPE_LABELS: Record<BookingType, string> = {
+  HALL_RENTAL: 'Оренда залу',
+  GROUP_SESSION: 'Групове заняття',
+  PERSONAL_TRAINING: 'Персональне тренування',
+};
+
+/** "пт, 27 листопада" → "Пт, 27 листопада". CSS `capitalize` would raise every word. */
+export function upperFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

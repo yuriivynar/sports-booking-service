@@ -34,3 +34,18 @@ export type UserProfile = Schemas['UserProfileDto'];
 export type SkillLevel = Schemas['SkillLevel'];
 export type AgeGroup = Schemas['AgeGroup'];
 export type HallKind = Schemas['HallKind'];
+
+export type Booking = Schemas['BookingDto'];
+export type BookingQuote = Schemas['BookingQuoteDto'];
+export type BookingStatus = Schemas['BookingStatus'];
+export type BookingType = Schemas['BookingType'];
+export type CreateBookingBody = Schemas['CreateBookingDto'];
+export type PriceLine = Schemas['PriceLineDto'];
+export type Availability = Schemas['AvailabilityDto'];
+
+/** Turns a Nest error body ({ message: string | string[] }) into one sentence. */
+export function apiErrorMessage(error: unknown, fallback: string): string {
+  const message = (error as { message?: string | string[] } | null | undefined)?.message;
+  if (Array.isArray(message)) return message.join('. ');
+  return message || fallback;
+}

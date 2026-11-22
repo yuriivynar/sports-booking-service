@@ -572,8 +572,8 @@ export interface components {
        * @description Start of a hall rental or personal training, on the hour (Kyiv time)
        */
       startsAt?: string;
-      /** @default 1 */
-      hours: number;
+      /** @description Length of a hall rental; 1 hour when omitted */
+      hours?: number;
       /**
        * Format: uuid
        * @description Membership to pay for a group session

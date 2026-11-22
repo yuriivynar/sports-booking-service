@@ -129,6 +129,9 @@ export default async function CenterPage({ params }: PageProps<'/centers/[slug]'
                       {formatPrice(hall.hourlyPrice)} / год
                     </span>
                   </p>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href={`/book/hall/${hall.id}`}>Орендувати</Link>
+                  </Button>
                 </div>
               </article>
             ))}
@@ -165,6 +168,9 @@ export default async function CenterPage({ params }: PageProps<'/centers/[slug]'
                     {formatPrice(trainer.sessionPrice)} / год
                   </span>
                 </p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={`/book/trainer/${trainer.id}`}>Записатися на тренування</Link>
+                </Button>
               </article>
             ))}
           </div>
