@@ -4,6 +4,8 @@ import {
   formatPrice,
   formatRelative,
   formatTimeRange,
+  kyivInputToDate,
+  toKyivInput,
   pluralize,
   upperFirst,
 } from './format';
@@ -42,5 +44,13 @@ describe('format', () => {
     expect(formatRelative('2026-11-23T11:55:00Z', now)).toBe('5 хвилин тому');
     expect(formatRelative('2026-11-22T12:00:00Z', now)).toBe('учора');
     expect(formatRelative('2026-11-23T12:00:00Z', now)).toBe('зараз');
+  });
+
+  it('reads a datetime-local value as Kyiv time, also across DST', () => {
+    // Winter: UTC+2. Summer: UTC+3.
+    expect(kyivInputToDate('2026-11-27T18:00')?.toISOString()).toBe('2026-11-27T16:00:00.000Z');
+    expect(kyivInputToDate('2026-07-01T09:30')?.toISOString()).toBe('2026-07-01T06:30:00.000Z');
+    expect(kyivInputToDate('27.11.2026 18:00')).toBeNull();
+    expect(toKyivInput('2026-11-27T16:00:00.000Z')).toBe('2026-11-27T18:00');
   });
 });
