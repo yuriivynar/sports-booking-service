@@ -15,3 +15,6 @@ overrides:
   # GHSA-g3hv-75wg-m249: the shadcn CLI pulls minimatch 10 through ts-morph.
   # minimatch 11 keeps the minimatch(path, pattern) call that ts-morph uses.
   '@ts-morph/common>minimatch': ^11.0.1
+  # Effect ReDoS in Schema.TemplateLiteral (fixed in 3.22.1), pulled in by
+  # @prisma/config. 3.22.4 keeps the 3.x API that Prisma 7.10 uses.
+  '@prisma/config>effect': 3.22.4
