@@ -1,4 +1,11 @@
-import { addDays, isoWeekday, kyivDateString, kyivOffsetMinutes, kyivTime } from './kyiv-time.js';
+import {
+  addDays,
+  isoWeekday,
+  kyivClock,
+  kyivDateString,
+  kyivOffsetMinutes,
+  kyivTime,
+} from './kyiv-time.js';
 
 describe('kyiv-time', () => {
   it('uses UTC+2 in winter and UTC+3 in summer', () => {
@@ -27,5 +34,19 @@ describe('kyiv-time', () => {
     expect(addDays('2026-11-30', 2)).toBe('2026-12-02');
     expect(isoWeekday('2026-11-23')).toBe(1); // Monday
     expect(isoWeekday('2026-11-22')).toBe(7); // Sunday
+  });
+
+  it('reads the Kyiv wall clock of an instant', () => {
+    expect(kyivClock(new Date('2026-11-23T16:30:00Z'))).toEqual({
+      date: '2026-11-23',
+      hour: 18,
+      minute: 30,
+    });
+    // 23:00 UTC is already the next day in Kyiv.
+    expect(kyivClock(new Date('2026-11-23T23:00:00Z'))).toEqual({
+      date: '2026-11-24',
+      hour: 1,
+      minute: 0,
+    });
   });
 });

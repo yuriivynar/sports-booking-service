@@ -13,6 +13,20 @@ const offsetFormatter = new Intl.DateTimeFormat('en-US', {
   timeZoneName: 'longOffset',
 });
 
+const clockFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: CENTER_TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** Wall-clock time in Kyiv for the given instant. */
+export function kyivClock(instant: Date): { date: string; hour: number; minute: number } {
+  const parts = clockFormatter.formatToParts(instant);
+  const value = (type: string) => Number(parts.find((part) => part.type === type)?.value);
+  return { date: kyivDateString(instant), hour: value('hour'), minute: value('minute') };
+}
+
 /** Calendar date in Kyiv for the given instant, as YYYY-MM-DD. */
 export function kyivDateString(instant: Date): string {
   return dateFormatter.format(instant);
