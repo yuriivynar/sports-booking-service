@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BookingsModule } from './bookings/bookings.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module.js';
     LoyaltyModule,
     NotificationsModule,
     JobsModule,
+    AdminModule,
   ],
   controllers: [HealthController],
 })

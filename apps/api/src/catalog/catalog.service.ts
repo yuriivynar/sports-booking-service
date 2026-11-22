@@ -46,6 +46,7 @@ export class CatalogService {
 
   async listCenters(): Promise<CenterSummaryDto[]> {
     const centers = await this.prisma.sportCenter.findMany({
+      where: { isActive: true },
       orderBy: { name: 'asc' },
       include: {
         halls: { where: { isActive: true }, select: { sports: SPORT_SELECT } },
@@ -72,8 +73,8 @@ export class CatalogService {
 
   async getCenter(slug: string): Promise<CenterDetailDto> {
     const now = new Date();
-    const center = await this.prisma.sportCenter.findUnique({
-      where: { slug },
+    const center = await this.prisma.sportCenter.findFirst({
+      where: { slug, isActive: true },
       include: {
         halls: { where: { isActive: true }, orderBy: { name: 'asc' }, include: HALL_INCLUDE },
         trainers: {
@@ -90,7 +91,7 @@ export class CatalogService {
     });
     if (!center) throw new NotFoundException('Центр не знайдено');
 
-    const { halls, trainers, sections, ...rest } = center;
+    const { halls, trainers, sections, isActive: _isActive, ...rest } = center;
     return {
       ...rest,
       sports: uniqueSports(halls.flatMap((hall) => hall.sports)),
