@@ -17,6 +17,7 @@ import {
   formatTimeRange,
   LEVEL_LABELS,
   pluralize,
+  upperFirst,
 } from '@/lib/format';
 
 async function loadSection(id: string) {
@@ -106,8 +107,8 @@ export default async function SectionPage({ params }: PageProps<'/sections/[id]'
               <div className="space-y-6">
                 {groupByDay(section.sessions).map(([day, sessions]) => (
                   <div key={day} className="reveal space-y-2">
-                    <h3 className="font-sans text-sm font-semibold text-muted-foreground capitalize">
-                      {formatDay(sessions[0].startsAt)}
+                    <h3 className="font-sans text-sm font-semibold text-muted-foreground">
+                      {upperFirst(formatDay(sessions[0].startsAt))}
                     </h3>
                     {sessions.map((session) => (
                       <div
@@ -126,9 +127,15 @@ export default async function SectionPage({ params }: PageProps<'/sections/[id]'
                           </div>
                         </div>
                         <SeatsMeter capacity={session.capacity} seatsLeft={session.seatsLeft} />
-                        <Button disabled title="Бронювання з’явиться в наступному оновленні">
-                          Записатися
-                        </Button>
+                        {session.seatsLeft > 0 ? (
+                          <Button asChild>
+                            <Link href={`/book/session/${session.id}`}>Записатися</Link>
+                          </Button>
+                        ) : (
+                          <Button variant="secondary" disabled>
+                            Місць немає
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
