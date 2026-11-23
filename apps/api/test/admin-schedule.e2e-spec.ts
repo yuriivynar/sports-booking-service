@@ -260,6 +260,8 @@ describe('Admin schedule (e2e)', () => {
     });
     await admin.post(`/api/admin/sessions/${session.id}/cancel`, { reason: 'Запізно' }).expect(409);
     await admin.post(`/api/admin/sessions/${randomUUID()}/cancel`, { reason: 'Немає' }).expect(404);
+    // A reason made of spaces is no reason for the participants.
+    await admin.post(`/api/admin/sessions/${randomUUID()}/cancel`, { reason: '     ' }).expect(400);
   });
 
   it('finishes stuck cancellations and refunds in the maintenance job', async () => {

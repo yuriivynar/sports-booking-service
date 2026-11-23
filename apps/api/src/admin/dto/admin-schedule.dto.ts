@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsDate,
   IsInt,
@@ -66,6 +66,8 @@ export class CreateSessionsDto {
 
 export class CancelSessionDto {
   @ApiProperty({ example: 'Тренер захворів', description: 'Shown to the users in the notice' })
+  // Trimmed first, so "   " does not pass the length check as a reason.
+  @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @MinLength(3)
   @MaxLength(200)
