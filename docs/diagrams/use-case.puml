@@ -104,10 +104,9 @@ UC_Book <|-- UC_Hall
 UC_Book <|-- UC_Group
 UC_Book <|-- UC_Personal
 UC_Book ..> UC_Check : <<include>>
-UC_Book ..> UC_Pay : <<include>>
+UC_Pay .> UC_Book : <<extend>>\n[ціна > 0]
 UC_Membership ..> UC_Pay : <<include>>
 UC_UsePoints .> UC_Pay : <<extend>>
-UC_Pay ..> UC_Award : <<include>>
 UC_Pay --> Payment
 
 ' --- Адміністратор ---
@@ -118,11 +117,13 @@ Admin --> UC_AdmPromo
 Admin --> UC_AdmStats
 Admin --> UC_AdmRemind
 UC_AdmRemind ..> UC_Remind : <<include>>
+UC_AdmRemind ..> UC_Award : <<include>>
 UC_AdmSections ..> UC_Announce : <<include>>
 UC_AdmPromo ..> UC_Announce : <<include>>
 
 ' --- Системні актори ---
 Cron --> UC_Remind
+Cron --> UC_Award
 UC_Remind --> Email
 UC_Announce --> Email
 UC_Award --> Email
