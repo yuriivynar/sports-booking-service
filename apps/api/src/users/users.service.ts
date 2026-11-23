@@ -119,10 +119,11 @@ export class UsersService {
       include: PROFILE_INCLUDE,
     });
 
-    // Only files in this user's own folder: the first avatar URL comes from
-    // the sign-up metadata, which the user controls.
+    // Only a file this endpoint uploaded for this user: the first avatar URL
+    // comes from the sign-up metadata, which the user controls, so a path
+    // such as avatars/<id>/../../seed/hero.jpg must not reach the storage.
     const oldPath = previous.avatarUrl && this.storage.pathOf(previous.avatarUrl);
-    if (oldPath?.startsWith(`avatars/${userId}/`)) {
+    if (oldPath && isOwnAvatar(oldPath, userId)) {
       // A leftover file costs little; a failed request after a successful upload costs more.
       await this.storage.remove(oldPath).catch((error: unknown) => {
         this.logger.warn(`Could not delete old avatar ${oldPath}: ${String(error)}`);
@@ -130,4 +131,15 @@ export class UsersService {
     }
     return profile;
   }
+}
+
+/** Matches the names `uploadAvatar` gives: avatars/<user id>/<uuid>.<ext>. */
+function isOwnAvatar(path: string, userId: string): boolean {
+  const [folder, owner, file, ...rest] = path.split('/');
+  return (
+    rest.length === 0 &&
+    folder === 'avatars' &&
+    owner === userId &&
+    /^[0-9a-f-]{36}\.(?:jpg|png|webp)$/.test(file ?? '')
+  );
 }
