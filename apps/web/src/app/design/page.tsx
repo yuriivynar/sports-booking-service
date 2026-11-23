@@ -23,7 +23,7 @@ import type { Booking } from '@/lib/api';
 
 export const metadata: Metadata = { title: 'Дизайн-система' };
 
-/** Demo booking for the style guide; the dates are fixed, nothing is sent anywhere. */
+/** Demo booking for the style guide; the dates are fixed, forms run in demo mode. */
 const DEMO_BOOKING: Booking = {
   id: '00000000-0000-4000-8000-000000000000',
   type: 'GROUP_SESSION',
@@ -263,7 +263,7 @@ export default function DesignSystemPage() {
                 pointsEarned={DEMO_BOOKING.pointsEarned}
               />
             </div>
-            <PaymentForm booking={{ ...DEMO_BOOKING, status: 'PENDING' }} />
+            <PaymentForm booking={{ ...DEMO_BOOKING, status: 'PENDING' }} demo />
             {/* The narrow checkout card with a membership: long label, free total. */}
             <div className="max-w-sm rounded-3xl border bg-card p-6">
               <PriceBreakdown
@@ -350,6 +350,7 @@ export default function DesignSystemPage() {
             </ChartCard>
           </div>
           <MaintenanceButton
+            demo
             initial={{
               releasedHolds: 2,
               sessionBookingsCancelled: 0,
