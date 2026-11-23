@@ -42,8 +42,18 @@ describe('BookingLifecycle (State)', () => {
   it('lets the center cancel a confirmed booking inside the 2-hour deadline', () => {
     expect(new BookingLifecycle('CONFIRMED', times(0.5), now).cancelByCenter()).toBe('CANCELLED');
     expect(new BookingLifecycle('PENDING', times(0.5), now).cancelByCenter()).toBe('CANCELLED');
-    expect(() => new BookingLifecycle('CONFIRMED', times(-0.5), now).cancelByCenter()).toThrow(
-      'Заняття вже почалося',
+  });
+
+  it('lets a retry finish a center cancellation after the start', () => {
+    expect(new BookingLifecycle('CONFIRMED', times(-0.5), now).cancelByCenter()).toBe('CANCELLED');
+    expect(new BookingLifecycle('PENDING', times(-0.5), now).cancelByCenter()).toBe('CANCELLED');
+  });
+
+  it('releases an unpaid hold even after the start, but never a paid booking', () => {
+    expect(new BookingLifecycle('PENDING', times(0.1), now).expire()).toBe('CANCELLED');
+    expect(new BookingLifecycle('PENDING', times(-0.5), now).expire()).toBe('CANCELLED');
+    expect(() => new BookingLifecycle('CONFIRMED', times(24), now).expire()).toThrow(
+      ConflictException,
     );
   });
 
@@ -66,6 +76,7 @@ describe('BookingLifecycle (State)', () => {
     expect(() => booking.pay()).toThrow(ConflictException);
     expect(() => booking.cancel()).toThrow(ConflictException);
     expect(() => booking.cancelByCenter()).toThrow(ConflictException);
+    expect(() => booking.expire()).toThrow(ConflictException);
     expect(() => booking.complete()).toThrow(ConflictException);
     expect(booking.allowedActions()).toEqual([]);
   });

@@ -268,9 +268,10 @@ export class BookingFacade {
    */
   async finishSessionCancellations(now = new Date()): Promise<number> {
     const sessions = await this.prisma.groupSession.findMany({
+      // No start-time filter: the center decided before the start, so a
+      // booking left over by a failed run is finished even afterwards.
       where: {
         isCancelled: true,
-        startsAt: { gt: now },
         bookings: { some: { status: { in: ['PENDING', 'CONFIRMED'] } } },
       },
       select: {
@@ -533,6 +534,7 @@ export class BookingFacade {
       }
       const lifecycle = new BookingLifecycle(locked.status, booking, now);
       if (by.kind === 'center') lifecycle.cancelByCenter();
+      else if (by.kind === 'hold-expiry') lifecycle.expire();
       else lifecycle.cancel();
 
       await tx.booking.update({

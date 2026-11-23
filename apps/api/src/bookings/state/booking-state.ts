@@ -20,7 +20,8 @@ export interface BookingTimes {
  *
  *   PENDING ──pay/confirm──▶ CONFIRMED ──complete──▶ COMPLETED
  *      │                        │
- *      └──cancel/cancelByCenter─┴──▶ CANCELLED
+ *      └─cancel/cancelByCenter/─┴──▶ CANCELLED
+ *        expire
  *
  * `cancel` is the user's own cancellation and obeys the 2-hour deadline;
  * `cancelByCenter` is the center calling a session off, allowed until it starts.
@@ -39,6 +40,11 @@ export abstract class BookingState {
   }
 
   cancel(_booking: BookingLifecycle): BookingState {
+    throw this.refuse('скасувати');
+  }
+
+  /** The 15-minute hold ran out unpaid; the system releases the place. */
+  expire(_booking: BookingLifecycle): BookingState {
     throw this.refuse('скасувати');
   }
 
@@ -85,8 +91,17 @@ class PendingState extends BookingState {
     return STATES.CANCELLED;
   }
 
-  override cancelByCenter(booking: BookingLifecycle): BookingState {
-    return this.cancel(booking);
+  /**
+   * Allowed even after the start: a booking made shortly before the
+   * activity and never paid must still give back its points and visit.
+   */
+  override expire(): BookingState {
+    return STATES.CANCELLED;
+  }
+
+  /** The center decided before the start (the admin API checks that). */
+  override cancelByCenter(): BookingState {
+    return STATES.CANCELLED;
   }
 
   override allowedActions(booking: BookingLifecycle): BookingAction[] {
@@ -104,11 +119,12 @@ class ConfirmedState extends BookingState {
     return STATES.CANCELLED;
   }
 
-  /** No 2-hour deadline: the user did not choose this, so it is never too late. */
-  override cancelByCenter(booking: BookingLifecycle): BookingState {
-    if (booking.hasStarted()) {
-      throw new ConflictException('Заняття вже почалося');
-    }
+  /**
+   * No 2-hour deadline: the user did not choose this. The center decided
+   * before the start (the admin API checks that), so a retry that runs
+   * after the start still finishes the cancellation and the refund.
+   */
+  override cancelByCenter(): BookingState {
     return STATES.CANCELLED;
   }
 
@@ -183,6 +199,11 @@ export class BookingLifecycle {
 
   cancelByCenter(): BookingStatus {
     this.state = this.state.cancelByCenter(this);
+    return this.status;
+  }
+
+  expire(): BookingStatus {
+    this.state = this.state.expire(this);
     return this.status;
   }
 
