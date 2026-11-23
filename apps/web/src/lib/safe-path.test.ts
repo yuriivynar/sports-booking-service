@@ -13,6 +13,14 @@ describe('safePath', () => {
     expect(safePath('/\\evil.example')).toBe('/');
   });
 
+  it('rejects tabs and newlines that browsers strip into "//"', () => {
+    expect(safePath('/\t/evil.example')).toBe('/');
+    expect(safePath('/\n/evil.example')).toBe('/');
+    expect(safePath('/\r\n/evil.example')).toBe('/');
+    // An encoded tab is just text in the path and stays on this site.
+    expect(safePath('/%09/evil.example')).toBe('/%09/evil.example');
+  });
+
   it('falls back when nothing is given', () => {
     expect(safePath(null)).toBe('/');
     expect(safePath(undefined, '/profile')).toBe('/profile');
