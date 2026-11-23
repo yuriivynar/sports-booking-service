@@ -103,13 +103,15 @@ package "bookings" {
 
   class BookingLifecycle <<State>> {
     - state : BookingState
-    + pay() / confirm() / cancel() / cancelByCenter() / complete()
+    + pay() / confirm() / cancel() / cancelByCenter()
+    + expire() / complete()
     + allowedActions()
   }
   abstract class BookingState <<State>> {
     + pay(b) / confirm(b) / complete(b)
     + cancel(b) «user, 2-hour deadline»
-    + cancelByCenter(b) «until it starts»
+    + cancelByCenter(b) «center decided before the start»
+    + expire(b) «unpaid hold, even after the start»
   }
   class PendingState <<State>>
   class ConfirmedState <<State>>

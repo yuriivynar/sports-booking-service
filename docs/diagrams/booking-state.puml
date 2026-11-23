@@ -24,10 +24,11 @@ state "COMPLETED\n«Завершено»" as COMPLETED #E8F5E9 : CompletedState\
 
 PENDING --> CONFIRMED : pay()\n[оплата успішна,\nзаняття не почалося]
 PENDING --> PENDING : pay() відхилено (402)
-PENDING --> CANCELLED : cancel() / cancelByCenter()\n[до початку]
-PENDING --> CANCELLED : минуло 15 хв\n(releaseExpiredHolds)
+PENDING --> CANCELLED : cancel()\n[до початку]
+PENDING --> CANCELLED : cancelByCenter()\n[центр скасував заняття]
+PENDING --> CANCELLED : expire()\n[минуло 15 хв без оплати,\nнавіть після початку]\n/ повернення балів, візиту
 CONFIRMED --> CANCELLED : cancel()\n[≥ 2 год до початку]\n/ повернення коштів, балів, візиту
-CONFIRMED --> CANCELLED : cancelByCenter()\n[центр скасував заняття,\nдо його початку]\n/ повне повернення
+CONFIRMED --> CANCELLED : cancelByCenter()\n[центр скасував заняття\nдо його початку]\n/ повне повернення
 CONFIRMED --> COMPLETED : complete()\n[заняття завершилося]
 
 CANCELLED --> [*]
