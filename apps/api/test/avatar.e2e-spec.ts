@@ -68,6 +68,19 @@ describe('Avatar upload (e2e)', () => {
     expect(storage.pathOf(res.body.avatarUrl)).toBe([...storage.files.keys()][0]);
   });
 
+  it('never deletes a file outside the user’s own uploads', async () => {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: `https://storage.test/media/avatars/${userId}/../../seed/hero.jpg` },
+    });
+    const remove = vi.spyOn(storage, 'remove');
+
+    await upload(png(), 'next.png').expect(200);
+
+    expect(remove).not.toHaveBeenCalled();
+    remove.mockRestore();
+  });
+
   it('judges the file by its content, not by its name', async () => {
     const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
 

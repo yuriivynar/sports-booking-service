@@ -2,6 +2,7 @@
 
 import { Loader2, Wrench } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useAdminAction } from '@/components/admin/form-controls';
 import { Button } from '@/components/ui/button';
 import type { JobRun } from '@/lib/api';
@@ -21,11 +22,22 @@ const LINES: { key: keyof JobRun; label: string }[] = [
  * The same job Supabase Cron runs every 15 minutes, on demand: handy in a
  * demo, or after the scheduler was down for a while.
  */
-export function MaintenanceButton({ initial = null }: { initial?: JobRun | null }) {
+export function MaintenanceButton({
+  initial = null,
+  demo = false,
+}: {
+  initial?: JobRun | null;
+  /** The /design page: show the result without running the real job. */
+  demo?: boolean;
+}) {
   const { pending, run } = useAdminAction();
   const [result, setResult] = useState<JobRun | null>(initial);
 
   async function start() {
+    if (demo) {
+      toast.info('Демо: на сторінці адмінки ця кнопка запускає справжнє завдання');
+      return;
+    }
     const api = await browserApi();
     const data = await run(() => api.POST('/api/admin/jobs/run'), 'Обслуговування виконано');
     if (data) setResult(data);

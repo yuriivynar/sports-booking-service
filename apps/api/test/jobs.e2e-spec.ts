@@ -154,6 +154,50 @@ describe('Scheduled jobs and offers (e2e)', () => {
     expect(await types(user)).toContain('BONUS_EARNED');
   });
 
+  it('releases an unpaid hold whose activity has already started', async () => {
+    const user = await newUser();
+    await prisma.user.update({ where: { id: user.id }, data: { bonusBalance: 50 } });
+    const session = await prisma.groupSession.findFirstOrThrow({
+      where: {
+        isCancelled: false,
+        bookedCount: 0,
+        startsAt: { gt: new Date(Date.now() + 3 * HOUR) },
+        id: { notIn: [...touchedSessions.keys()] },
+      },
+      orderBy: { startsAt: 'desc' },
+    });
+    touchedSessions.set(session.id, session.capacity);
+    const { body } = await user
+      .post('/api/bookings', {
+        type: 'GROUP_SESSION',
+        groupSessionId: session.id,
+        pointsToRedeem: 50,
+      })
+      .expect(201);
+    expect(body).toMatchObject({ status: 'PENDING', pointsRedeemed: expect.any(Number) });
+    const redeemed: number = body.pointsRedeemed;
+    expect(redeemed).toBeGreaterThan(0);
+
+    // Booked a few minutes before the start, never paid, and the start has passed.
+    await prisma.booking.update({
+      where: { id: body.id },
+      data: {
+        createdAt: new Date(Date.now() - 20 * 60 * 1000),
+        startsAt: new Date(Date.now() - 5 * 60 * 1000),
+        endsAt: new Date(Date.now() + 40 * 60 * 1000),
+      },
+    });
+
+    await runJob().expect(200);
+
+    const row = await prisma.booking.findUniqueOrThrow({ where: { id: body.id } });
+    expect(row.status).toBe('CANCELLED');
+    const { bonusBalance } = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    expect(bonusBalance).toBe(50);
+    const seat = await prisma.groupSession.findUniqueOrThrow({ where: { id: session.id } });
+    expect(seat.bookedCount).toBe(0);
+  });
+
   it('lets only administrators run the job by hand', async () => {
     const client = await newUser();
     const admin = await newUser(TEST_ADMIN_EMAIL);

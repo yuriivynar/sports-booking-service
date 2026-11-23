@@ -260,6 +260,8 @@ describe('Admin schedule (e2e)', () => {
     });
     await admin.post(`/api/admin/sessions/${session.id}/cancel`, { reason: 'Запізно' }).expect(409);
     await admin.post(`/api/admin/sessions/${randomUUID()}/cancel`, { reason: 'Немає' }).expect(404);
+    // A reason made of spaces is no reason for the participants.
+    await admin.post(`/api/admin/sessions/${randomUUID()}/cancel`, { reason: '     ' }).expect(400);
   });
 
   it('finishes stuck cancellations and refunds in the maintenance job', async () => {
@@ -279,7 +281,8 @@ describe('Admin schedule (e2e)', () => {
       data: { status: 'CANCELLED', cancelledAt: new Date(Date.now() - 20 * 60_000) },
     });
 
-    // A finished booking of a cancelled session: never completed, never rewarded.
+    // A booking of a cancelled session that has since passed: the center decided
+    // before the start, so it is still cancelled and refunded, never completed.
     const pastSession = await single(22);
     const past = await bookAndPay(pastSession);
     const ago = {
@@ -305,7 +308,7 @@ describe('Admin schedule (e2e)', () => {
       booking: 'CANCELLED',
       payment: 'REFUNDED',
     });
-    expect((await statusOf(past.bookingId)).booking).toBe('CONFIRMED');
+    expect(await statusOf(past.bookingId)).toEqual({ booking: 'CANCELLED', payment: 'REFUNDED' });
 
     // Nothing is refunded twice on the next run.
     const again = await runJob();

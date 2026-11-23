@@ -160,6 +160,11 @@ export class BookingFacade {
     }
     const lifecycle = new BookingLifecycle(booking.status, booking, now);
     lifecycle.pay();
+    // Recomputed, not read: a membership may have ended since the last job
+    // run. Done before the charge, so no database step can fail between a
+    // successful charge and the refund guard below.
+    const loyaltyTier = await this.loyalty.recalculateTier(userId);
+    const pointsEarned = loyaltyPolicyFor(loyaltyTier).pointsFor(booking.finalPrice);
 
     const payment = await this.prisma.payment.create({
       data: { userId, bookingId, amount: booking.finalPrice, provider: this.payments.name },
@@ -189,9 +194,6 @@ export class BookingFacade {
       throw new HttpException(result.reason, HttpStatus.PAYMENT_REQUIRED);
     }
 
-    // Recomputed, not read: a membership may have ended since the last job run.
-    const loyaltyTier = await this.loyalty.recalculateTier(userId);
-    const pointsEarned = loyaltyPolicyFor(loyaltyTier).pointsFor(booking.finalPrice);
     try {
       await this.prisma.$transaction(async (tx) => {
         // Conditional: a parallel pay or cancel that got here first wins.
@@ -268,9 +270,10 @@ export class BookingFacade {
    */
   async finishSessionCancellations(now = new Date()): Promise<number> {
     const sessions = await this.prisma.groupSession.findMany({
+      // No start-time filter: the center decided before the start, so a
+      // booking left over by a failed run is finished even afterwards.
       where: {
         isCancelled: true,
-        startsAt: { gt: now },
         bookings: { some: { status: { in: ['PENDING', 'CONFIRMED'] } } },
       },
       select: {
@@ -533,6 +536,7 @@ export class BookingFacade {
       }
       const lifecycle = new BookingLifecycle(locked.status, booking, now);
       if (by.kind === 'center') lifecycle.cancelByCenter();
+      else if (by.kind === 'hold-expiry') lifecycle.expire();
       else lifecycle.cancel();
 
       await tx.booking.update({
