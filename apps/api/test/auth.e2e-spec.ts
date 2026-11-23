@@ -87,6 +87,22 @@ describe('Authentication and profile (e2e)', () => {
     });
   });
 
+  it('answers 409, not 500, when a new account reuses the email of another profile', async () => {
+    const first = newUser();
+    const firstToken = await signer.sign(first);
+    await request(app.getHttpServer())
+      .get('/api/me')
+      .auth(firstToken, { type: 'bearer' })
+      .expect(200);
+
+    const secondToken = await signer.sign(newUser(first.email));
+    const res = await request(app.getHttpServer())
+      .get('/api/me')
+      .auth(secondToken, { type: 'bearer' })
+      .expect(409);
+    expect(res.body.message).toContain('email уже належить');
+  });
+
   it('gives the ADMIN role to emails listed in ADMIN_EMAILS', async () => {
     const token = await signer.sign(newUser(TEST_ADMIN_EMAIL));
 

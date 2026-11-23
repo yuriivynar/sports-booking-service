@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { User } from '../generated/prisma/client.js';
 import type { SupabaseClaims } from '../auth/supabase-jwt.verifier.js';
+import { PG_UNIQUE_VIOLATION, postgresErrorCode } from '../common/database-errors.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { FileStorage } from '../storage/file-storage.js';
 import { detectImageType, MAX_AVATAR_BYTES } from './avatar-image.js';
@@ -40,17 +41,28 @@ export class UsersService {
    */
   async ensureUser(claims: SupabaseClaims): Promise<User> {
     const isAdmin = this.adminEmails.has(claims.email);
-    const user = await this.prisma.user.upsert({
-      where: { id: claims.sub },
-      create: {
-        id: claims.sub,
-        email: claims.email,
-        fullName: claims.fullName,
-        avatarUrl: claims.avatarUrl,
-        role: isAdmin ? 'ADMIN' : 'CLIENT',
-      },
-      update: {},
-    });
+    const user = await this.prisma.user
+      .upsert({
+        where: { id: claims.sub },
+        create: {
+          id: claims.sub,
+          email: claims.email,
+          fullName: claims.fullName,
+          avatarUrl: claims.avatarUrl,
+          role: isAdmin ? 'ADMIN' : 'CLIENT',
+        },
+        update: {},
+      })
+      .catch((error: unknown) => {
+        // A new Supabase account with the email of an older, deleted one:
+        // the old profile still owns the email and its booking history.
+        if (postgresErrorCode(error) === PG_UNIQUE_VIOLATION) {
+          throw new ConflictException(
+            'Цей email уже належить іншому обліковому запису SportHub. Зверніться до адміністратора',
+          );
+        }
+        throw error;
+      });
     if (isAdmin && user.role !== 'ADMIN') {
       return this.prisma.user.update({ where: { id: user.id }, data: { role: 'ADMIN' } });
     }
